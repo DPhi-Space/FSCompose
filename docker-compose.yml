@@ -1,0 +1,26 @@
+version: '3'
+services:
+  fsw:
+    image: jsilveira1409/fsw:test
+    ports:
+    - "50001:50001"
+    - "50002:50002"
+    networks:
+      my_network:
+        ipv4_address: 172.30.0.2
+  
+  gds:
+    image: jsilveira1409/gds:test
+    networks:
+      my_network:
+        ipv4_address: 172.30.0.4
+    ports:
+      - "127.0.0.1:5000:5000" # Expose GUI on port 5000
+
+
+      
+networks:
+  my_network:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

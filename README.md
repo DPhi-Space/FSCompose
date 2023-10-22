@@ -3,6 +3,8 @@
 1. Clone the git
    ```bash
    git clone https://github.com/DPhi-Space/FSCompose.git
+   cd FSCompose
+   
    ```
    
 2. Run Docker Compose

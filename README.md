@@ -1,13 +1,14 @@
 # FSCompose
 
-1. Clone the git
+1. Install Docker 
+2. Clone the git
    ```bash
    git clone https://github.com/DPhi-Space/FSCompose.git
    cd FSCompose
    
    ```
    
-2. Run Docker Compose
+3. Run Docker Compose
    ```bash
    docker compose up
    ```

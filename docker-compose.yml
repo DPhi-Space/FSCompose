@@ -1,26 +1,60 @@
 version: '3'
 services:
-  fsw:
-    image: jsilveira1409/fsw:test
-    ports:
-    - "50001:50001"
-    - "50002:50002"
-    networks:
-      my_network:
-        ipv4_address: 172.30.0.2
-  
+
   gds:
-    image: jsilveira1409/gds:test
+    image: jsilveira1409/gds:latest
+    ports:
+      - "127.0.0.1:5000:5000" # Expose GUI on port 5000
     networks:
       my_network:
         ipv4_address: 172.30.0.4
-    ports:
-      - "127.0.0.1:5000:5000" # Expose GUI on port 5000
 
+  fsw:
+    #image: jsilveira1409/mpu-lite:latest
+    image: jsilveira1409/mpu:latest
+    depends_on:
+      - gds
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - payload1:/app/payloads/payload1
+      - payload2:/app/payloads/payload2
+      - sharepoint:/app/sharepoint
+    networks:
+      my_network:
+        ipv4_address: 172.30.0.2
+    
+    command: ["./Native", "-a", "172.30.0.4", "-p", "50000"]
 
+  payload1:
+    image: payload1:latest
+    volumes:
+      - payload1:/app/data
+      - sharepoint:/app/sharepoint
+    networks:
+      my_network:
+        ipv4_address: 172.30.0.5
+
+  payload2:
+    image: payload2:latest
+    volumes:
+      - payload2:/app/data
+      - sharepoint:/app/sharepoint
+    networks:
+      my_network:
+        ipv4_address: 172.30.0.6
+    devices:
+      - "/dev/i2c-1:/dev/i2c-1"  
+
+        
       
+
 networks:
   my_network:
     ipam:
       config:
         - subnet: 172.30.0.0/24
+
+volumes:
+  payload1:
+  payload2:  
+  sharepoint:

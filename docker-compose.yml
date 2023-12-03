@@ -10,8 +10,7 @@ services:
         ipv4_address: 172.30.0.4
 
   fsw:
-    #image: jsilveira1409/mpu-lite:latest
-    image: jsilveira1409/mpu:latest
+    image: jsilveira1409/fsw:latest
     depends_on:
       - gds
     volumes:
@@ -25,6 +24,10 @@ services:
     
     command: ["./Native", "-a", "172.30.0.4", "-p", "50000"]
 
+##############################################################
+########################## Payloads ##########################
+##############################################################
+
   payload1:
     image: payload1:latest
     volumes:
@@ -33,20 +36,11 @@ services:
     networks:
       my_network:
         ipv4_address: 172.30.0.5
-
-  payload2:
-    image: payload2:latest
-    volumes:
-      - payload2:/app/data
-      - sharepoint:/app/sharepoint
-    networks:
-      my_network:
-        ipv4_address: 172.30.0.6
-    devices:
-      - "/dev/i2c-1:/dev/i2c-1"  
-
-        
+#    devices:
+#      - "/dev/i2c-1:/dev/i2c-1"           
       
+      
+
 
 networks:
   my_network:

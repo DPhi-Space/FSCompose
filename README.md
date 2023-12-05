@@ -1,4 +1,6 @@
 # FSCompose
+![](imgs/logo.png)
+
 ## Setup
 ### 1. Install Docker 
 Checkout this guide 
@@ -67,7 +69,7 @@ Go to the **Uplink** Tab and and type the following destination path:
    
 Then select the file you want to uplink and click on the **Uplink** button. This will Uplink this file to the `/data/` folder inside the Payload Container.
 
-![Alt text](image.png)
+![Alt text](imgs/image.png)
 
 #### Downlink Files from Data Folder to GDS
 
@@ -75,7 +77,7 @@ Then select the file you want to uplink and click on the **Uplink** button. This
 
 To start a payload container, which is defined in the Docker Compose, go to the **Commanding** Tab and select the **dockerManager.Start** command as shown below:
 
-   ![Alt text](image-1.png)
+   ![Alt text](imgs/image-1.png)
 
 
 **Attention**: The service name needs to match the name of the service defined on the Docker Compose. In this case, the service name is `payload1`. 
@@ -85,7 +87,7 @@ Press the **SendCommand** button and the Payload Container will be started. Pres
 #### Build a new Docker Container on the fly
 It is also possible to build a new Docker Container for your Payload. To do that, go to the **Commanding** Tab and select the **dockerManager.BuildPayload** command as shown below:
 
-   ![Alt text](image-5.png)
+   ![Alt text](imgs/image-5.png)
 
 This will execute the following bash command:
 

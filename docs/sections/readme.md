@@ -2,12 +2,12 @@
 ![](../imgs/logo.png)
 
 ## Setup
-### 1. Install Docker 
+### 1 Install Docker 
 Checkout this guide 
 
 [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
 
-### 2. Clone the git 
+### 2 Clone the git 
 
    ```bash
    git clone https://github.com/DPhi-Space/FSCompose.git

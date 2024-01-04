@@ -1,4 +1,7 @@
 # Setup
+
+[TOC]
+
 ## 1. Install Docker 
 Checkout this guide 
 

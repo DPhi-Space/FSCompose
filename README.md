@@ -19,7 +19,7 @@ Checkout this guide
 We provide an example in `payload-example/` folder. You can use this as a template to build your own payload. Then run the following command inside the `payload-example/` folder:
    ```bash
    cd payload-example/
-   docker build -t Dockerfile.payload1 -t payload1:latest .
+   docker build -f Dockerfile.payload1 -t payload1:latest .
    cd ..
    ```
 
@@ -39,7 +39,7 @@ The Docker Compose includes the containers for the main Flight Software(FS), the
 #### b) Start FS and GDS only.
    
    ```bash   
-   docker compose up -d fs gds
+   docker compose up -d fsw gds
    ```
       
 The FS will try periodically to connect to ports 50001 and 50002. Create a Python script that starts a TCP server on those ports. Example provided in `example.py`

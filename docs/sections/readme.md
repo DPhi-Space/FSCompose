@@ -1,5 +1,5 @@
 # FSCompose
-![](imgs/logo.png)
+![](../imgs/logo.png)
 
 ## Setup
 ### 1. Install Docker 

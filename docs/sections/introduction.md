@@ -1,3 +1,3 @@
 # Introduction
 
-![](../../imgs/architecture.jpg)
+![](imgs/architecture.jpg)

@@ -1,7 +1,5 @@
 ![Alt text](sections/imgs/logo.png)
 
-# FSCompose
-
 Welcome to the FSCompose User Guide for the DPhi Space Flight Software!
 
 ## Overview

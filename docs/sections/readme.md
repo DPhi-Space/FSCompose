@@ -97,10 +97,6 @@ This will execute the following bash command:
 You can check the correct execution of this command on the **Events** Tab.
 
 #### Check Logs
-   
-
-
-
 
 
 

@@ -1,5 +1,6 @@
 # Setup
 
+
 ## 1. Install Docker 
 Checkout this guide 
 
@@ -42,8 +43,8 @@ The Docker Compose includes the containers for the main Flight Software(FS), the
       
 The FS will try periodically to connect to ports 50001 and 50002. Create a Python script that starts a TCP server on those ports. Example provided in `example.py`
 
-## 4 Using the GDS 
+## Next Step
 
-Now you can use the GDS to send commands to the FS. The GDS is a web application that can be accessed at :
+Now the next step is to learn how to use the Ground Data Segment GUI : 
 
-[127.0.0.1:5000/](http://127.0.0.1:5000/)
+[GDS guide](./sections/gds.md)

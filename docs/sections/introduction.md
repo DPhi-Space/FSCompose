@@ -4,6 +4,7 @@ The FSCompose is a software suite that allows any payload provider, user or even
 ![](imgs/architecture.jpg)
 
 
+## Architecture
 
 The main components of the system are : 
 
@@ -21,4 +22,18 @@ The main components of the system are :
 
 
 
- 
+## Data Architecture
+
+As the GDS does not directly interface with the payload, the core DPhi software and the payload container share a data folder, as depicted in the image below:
+
+![](imgs/data.jpg)
+
+**On the core software side**, this folder is mounted on the `/app/payloads/payload1` folder for *payload1*. If a new payload is created named *Camera*, the folder specific to that payload would be mounted at `/app/payloads/Camera`. 
+
+**On the payload container side**, the data folder is mounted at `/data`. For the *Camera* payload it would be also `/data`, but they are not shared between payload containers for obvious data privacy and protection reasons. Meaning that *payload1* does not have access to *Camera*'s `/data` folder, and vice-versa.
+
+Therefore, when we uplink a file destinated to *payload1*, we need to ensure we uplink it to `/app/payloads/payload1` so that the *payload1* container can access it through the aforementioned `/data` folder. This uplink is represented below.
+
+![](imgs/data-uplink.jpg)
+
+Once the file is in the shared folder, we can directly access it from the *payload1* container (`/data/script.py` in this example).

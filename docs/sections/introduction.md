@@ -37,3 +37,5 @@ Therefore, when we uplink a file destinated to *payload1*, we need to ensure we 
 ![](imgs/data-uplink.jpg)
 
 Once the file is in the shared folder, we can directly access it from the *payload1* container (`/data/script.py` in this example).
+
+![](imgs/data-transfer.jpg)

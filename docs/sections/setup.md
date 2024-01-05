@@ -47,4 +47,4 @@ The FS will try periodically to connect to ports 50001 and 50002. Create a Pytho
 
 Now the next step is to learn how to use the Ground Data Segment GUI : 
 
-[GDS guide](./sections/gds.md)
+[GDS guide](./gds.md)

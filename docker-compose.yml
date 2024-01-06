@@ -15,39 +15,36 @@ services:
       - gds
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - payload1:/app/payloads/payload1
-      - payload2:/app/payloads/payload2
+      - payload:/app/payload
       - sharepoint:/app/sharepoint
     networks:
       my_network:
-        ipv4_address: 172.30.0.2
+        ipv4_address: 172.30.0.5
     
-    command: ["./Native", "-a", "172.30.0.4", "-p", "50000"]
+    command: ["./Compose", "-a", "172.30.0.4", "-p", "50000"]
 
 ##############################################################
 ########################## Payloads ##########################
 ##############################################################
 
-  payload1:
-    image: payload1:latest
+  payload:
+    image: payload:latest
     volumes:
-      - payload1:/app/data
+      - payload:/app/data
       - sharepoint:/app/sharepoint
     networks:
       my_network:
-        ipv4_address: 172.30.0.5
-#    devices:
-#      - "/dev/i2c-1:/dev/i2c-1"           
+        ipv4_address: 172.30.0.10
+    #devices:
+    #  - "/dev/i2c-1:/dev/i2c-1"           
       
 
 networks:
   my_network:
     ipam:
       config:
-        - subnet: 172.30.0.0/24
+        - subnet: 172.30.0.0/20
 
 volumes:
-  payload1:
-  payload2:
-  payload3:  
+  payload:  
   sharepoint:

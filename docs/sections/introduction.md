@@ -1,5 +1,5 @@
 # Introduction
-The FSCompose is a software suite that allows any payload provider, user or even a hobbyist to test and develop their payload the same way it would and will be deployed in space when flying with DPhi Space. Software-wise, the architecture is as shown in the image below. Here we will describe how to use this software suite during development and testing of the payload on the ground, with little to no extra hardware. 
+The FSCompose is a software suite that allows any payload provider, user or hobbyist to test and develop their payload on earth the same way it will be deployed in space when flying with DPhi Space. Software-wise, the architecture is as shown in the image below. Here we will describe how to use this software suite during development and testing of the payload on the ground, with little to no extra hardware. 
 
 ![](imgs/architecture.jpg)
 

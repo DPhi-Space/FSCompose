@@ -4,7 +4,7 @@ Once the setup is done and the FSCompose is launched, we are ready to interface 
 
 [127.0.0.1:5000/](http://127.0.0.1:5000/)
 
-> [!CAUTION]
+
 > ⚠️ Please ensure no other service is using this port. You can verify this by running : 
 
 - **Windows**: Run the following then kill the process in the Task Manager with the given PID.
@@ -45,8 +45,8 @@ Then select the file you want to uplink and click on the **Uplink** button. This
 
 ![Alt text](imgs/uplink-image.png)
 
-> [!TIP]
-> To verify the uplink was successful, check the **Events** Tab:
+
+> ⚠️ To verify the uplink was successful, check the **Events** Tab:
 
 ![Alt text](imgs/uplink.png)
 
@@ -65,13 +65,12 @@ With the arguments above, this will execute the following bash command:
 This might take sometime, depending on the Container being built. You can check the correct execution of this command on the **Events** Tab. A build log will be created with the output of the command above. In this example it is named `payload1_build.log` and can be found under the `app/` folder in the **fsw** container.
 
 
-> [!TIP]
-> You can verify the correct execution of the command in the **Events** tab: 
+
+>⚠️ You can verify the correct execution of the command in the **Events** tab: 
 
 ![Alt text](imgs/build-success.png)
 
-> [!WARNING]
-> If it fails, follow the steps in the **Check Logs** Section to downlink the docker build log.
+>⚠️  If it fails, follow the steps in the **Check Logs** Section to downlink the docker build log.
 
 ## Update the Docker Compose and Uplink it 
 
@@ -109,8 +108,8 @@ Now you are ready to rumble.
 
 To start a payload container, which is defined in the Docker Compose, go to the **Commanding** Tab and select the **dockerManager.Start** command.
 
-> [!WARNING]
-> The **service name** needs to match the name of the service defined on the Docker Compose as mentionned in the previous step. In the example given before, we would run the command with the argument `payload`, as shown below:
+
+> ⚠️ The **service name** needs to match the name of the service defined on the Docker Compose as mentionned in the previous step. In the example given before, we would run the command with the argument `payload`, as shown below:
 
 > ![Alt text](imgs/payload-start.png)
 
@@ -122,8 +121,8 @@ If it fails, you will see the following Event:
 
 ![Alt text](imgs/fail-event.png)
 
-> [!TIP]
-> To examine the logs and find out why it failed, follow the **Check Logs** Section below.
+
+>⚠️ To examine the logs and find out why it failed, follow the **Check Logs** Section below.
 
 
 

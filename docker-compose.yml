@@ -27,16 +27,16 @@ services:
 ########################## Payloads ##########################
 ##############################################################
 
-  serial:
-    image: serial:latest
+  payload-service:
+    image: payloadserial:latest
     volumes:
       - payload:/app/data
       - sharepoint:/app/sharepoint
     networks:
       my_network:
         ipv4_address: 172.30.0.10
-    devices:
-      - "/dev/ttyACM0:/dev/ttyACM0"           
+    #devices:
+    #  - "/dev/ttyACM0:/dev/ttyUSB0"           
       
 
 networks:

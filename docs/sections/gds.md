@@ -114,7 +114,7 @@ To start a payload container, which is defined in the Docker Compose, go to the 
 > ![Alt text](imgs/payload-start.png)
 
 
-Press the **SendCommand** button and the Payload Container will be started. You can correctly verify that ir ran by checking the **Events** Tab as shown below:
+Press the **SendCommand** button and the Payload Container will be started. You can correctly verify that it ran by checking the **Events** Tab as shown below:
 
 ![Alt text](imgs/start-success.png)
 If it fails, you will see the following Event:

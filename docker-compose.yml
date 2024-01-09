@@ -27,16 +27,16 @@ services:
 ########################## Payloads ##########################
 ##############################################################
 
-  payload-service:
-    image: payloadserial:latest
+  payload-nano:
+    image: nano:latest
     volumes:
       - payload:/app/data
       - sharepoint:/app/sharepoint
     networks:
       my_network:
         ipv4_address: 172.30.0.10
-    #devices:
-    #  - "/dev/ttyACM0:/dev/ttyUSB0"           
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"           
       
 
 networks:
@@ -48,3 +48,6 @@ networks:
 volumes:
   payload:  
   sharepoint:
+
+x-special:
+  "com.docker.compose.project": "clustergate"

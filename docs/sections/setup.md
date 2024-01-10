@@ -1,5 +1,33 @@
 # Setup
 
+We provide a setup script that will take care of the necessary dependencies for you. Execute with admin privilege : 
+
+```bash
+sudo ./setup.sh
+```
+
+> ⚠️ Make sure you have execution permissions on it. If you get a *Permission denied* or *Command not found* error, run the following: 
+>```bash
+> sudo chmod +x setup.sh
+> ``` 
+
+# Run the FSCompose
+To start the FSCompose, run the following script. 
+```bash
+sudo ./run.sh
+```
+
+> ⚠️ Again, check for execution permissions on it. If you get a *Permission denied* or *Command not found* error, run the following: 
+>```bash
+> sudo chmod +x run.sh
+> ``` 
+
+
+Depending on the OS and user settings, the GUI might not open automatically. If that is the case, please open: 
+
+[127.0.0.1:5000/](http://127.0.0.1:5000/)
+
+If you prefer to go through the process yourself, follow the steps below.
 
 ## 1 Install Docker and Docker Compose
 As we want to containarize and isolate every application on board, we need Docker. First install **Docker Engine** by following the guide below:

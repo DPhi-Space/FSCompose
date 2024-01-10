@@ -2,6 +2,20 @@
 ![](imgs/logo.png)
 
 ## Setup
+
+We provide a setup script that will take care of the necessary dependencies for you. Execute with admin privilege : 
+
+```bash
+sudo ./setup.sh
+```
+
+> ⚠️ Make sure you have execution permissions on it. If you get a *Permission denied* or *Command not found* error, run the following: 
+>```bash
+> sudo chmod +x setup.sh
+> ``` 
+
+If you prefer to go through the installation yourself, follow the setps below.
+
 ### 1. Install Docker 
 Checkout this guide 
 

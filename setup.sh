@@ -50,7 +50,7 @@ if [ "$OS" = "Ubuntu" ]; then
 
     sudo apt-get update
     sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin    
-    sudo setfacl --modify user:<user name or ID>:rw /var/run/docker.sock
+    sudo usermod -aG docker $USER
 fi
 
 # 3. Pull FSCompose and setup 

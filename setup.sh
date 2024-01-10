@@ -5,8 +5,7 @@ VER=""
 
 # 1. Install Docker and dependencies
 # check linux distro
-if [ -f /etc/os-release ]; then
-    # freedesktop.org and systemd
+if [ -f /etc/os-release ]; then    
     . /etc/os-release
     OS=$NAME
     VER=$VERSION_ID
@@ -48,17 +47,11 @@ if [ "$OS" = "Ubuntu" ]; then
     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
     $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
     sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    sudo apt-get update
 
+    sudo apt-get update
     sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin    
-    sudo apt-get update
-    sudo apt-get install docker-compose-plugin
-
+    sudo setfacl --modify user:<user name or ID>:rw /var/run/docker.sock
 fi
 
-
-
 # 3. Pull FSCompose and setup 
-
-cd FSCompose
 docker compose pull fsw gds

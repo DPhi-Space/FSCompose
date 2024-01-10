@@ -60,6 +60,5 @@ fi
 
 # 3. Pull FSCompose and setup 
 
-git clone https://github.com/DPhi-Space/FSCompose.git
 cd FSCompose
 docker compose pull fsw gds

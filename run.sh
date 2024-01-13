@@ -42,7 +42,7 @@ cleanup() {
 }
 url="127.0.0.1:5000"
 
-#docker compose up -d fsw gds
+docker compose up -d fsw gds
 
 echo "Starting GDS GUI..."
 for i in {5..1}; do

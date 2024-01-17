@@ -1,5 +1,5 @@
+![](images/hw.jpeg)
 # RaspberryPi Camera Control
-
 ## Introduction
 
 Here we will present a more complex use case of FSCompose. The payload will be a Raspberry Pi 4 and a Pi Camera module connected to it, and the whole system communicates through TCP. Once a connection is establish, the payload captures images and sends them to the TCP client, which in our case is the *camera-controller.py* script. We will go through the three different stages of development in detail as we did with the Arduino Nano example. Let's start with the mission description for our payload, to better understand why we are doing what. 

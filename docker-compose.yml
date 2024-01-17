@@ -28,28 +28,7 @@ services:
 ########################## Payloads ##########################
 ##############################################################
      
-  payload-camera:
-    image: camera:latest
-    volumes:
-      - payload:/app/data
-      - sharepoint:/app/sharepoint
-      - private:/app/images
-    networks:
-      my_network:
-        ipv4_address: 172.30.0.11
-    ports:
-      - 5050:5050
-    
-  histogram:
-    image: histogram:latest
-    volumes:
-      - payload:/app/data
-      - sharepoint:/app/sharepoint
-      - private:/app/images
-    networks:
-      my_network:
-        ipv4_address: 172.30.0.12
-
+     
 networks:
   my_network:
     ipam:
@@ -58,5 +37,4 @@ networks:
 
 volumes:
   payload:  
-  private:
   sharepoint:

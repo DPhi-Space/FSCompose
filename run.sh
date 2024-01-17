@@ -80,9 +80,12 @@ while true; do
     read -p "Press 'q' to quit: " q
     if [ "$q" = "q" ]; then
         docker compose down 
+        docker stop clustergate-fsw-1
+        docker stop clustergate-gds-1
         break
     fi
 done
 
-trap cleanup EXIT
+docker compose down 
 
+trap cleanup EXIT

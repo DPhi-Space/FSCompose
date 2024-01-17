@@ -14,7 +14,7 @@ COPY . /app
 RUN mkdir -p /app/images
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir opencv-python numpy
+RUN pip install --no-cache-dir opencv-python numpy matplotlib
 
 # Make port 5050 available to the world outside this container
 EXPOSE 5050

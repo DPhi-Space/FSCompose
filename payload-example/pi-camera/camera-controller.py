@@ -41,7 +41,7 @@ def plot_rgb_histogram(image_path, data_folder):
 
     plt.tight_layout()
     # save the plot to a file
-    plt.savefig(data_folder + '/histogram_' + str(histogram_counter) +'.png')
+    plt.savefig(data_folder + '/histogram.png')
     histogram_counter += 1
 
 def calculate_highest_red_threshold(image_path):
@@ -85,7 +85,8 @@ def process_images_in_folder(image_path, data_path):
             
     # Move the image with the highest red threshold to the data folder
     if max_threshold_image:
-        destination_path = os.path.join(data_path, os.path.basename(max_threshold_image))
+        #destination_path = os.path.join(data_path, os.path.basename(max_threshold_image))
+        destination_path = data_path + "/frame.png"
         #os.rename(max_threshold_image, destination_path)
         # shutil is used to move the file to another volume inside docker
         shutil.move(max_threshold_image, destination_path)
@@ -93,7 +94,8 @@ def process_images_in_folder(image_path, data_path):
         plot_rgb_histogram(destination_path, data_path)
 
     # Move the file to the data folder
-    os.rename('red_threshold.txt', data_path + '/red_threshold.txt')
+    #os.rename('red_threshold.txt', data_path + '/red_threshold.txt')
+    shutil.move('red_threshold.txt', data_path + '/red_threshold.txt')
     
 
 def receive_image():

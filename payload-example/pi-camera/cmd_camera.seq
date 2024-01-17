@@ -1,0 +1,6 @@
+R00:00:00 dockerManager.BuildPayload,"Dockerfile.camera", "camera"
+R00:01:00 dockerManager.Start, "payload-camera"
+R00:05:00 dockerManager.Stop, "payload-camera"
+R00:05:15 fileDownlink.SendFile, "/app/payload/histogram.png", "histogram.png"
+R00:05:15 fileDownlink.SendFile, "/app/payload/frame.png", "histogram.png"
+R00:05:15 fileDownlink.SendFile, "/app/payload/red_threshold.txt", "log.txt"

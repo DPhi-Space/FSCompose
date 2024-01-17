@@ -1,0 +1,51 @@
+version: '3'
+#name: clustergate
+services:
+
+  gds:
+    image: jsilveira1409/gds:latest
+    ports:
+      - "127.0.0.1:5000:5000" # Expose GUI on port 5000
+    networks:
+      my_network:
+        ipv4_address: 172.30.0.4
+
+  fsw:
+    image: jsilveira1409/fsw:latest
+    depends_on:
+      - gds
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - payload:/app/payload
+      - sharepoint:/app/sharepoint
+    networks:
+      my_network:
+        ipv4_address: 172.30.0.5
+    
+    command: ["./Compose", "-a", "172.30.0.4", "-p", "50000"]
+
+##############################################################
+########################## Payloads ##########################
+##############################################################
+     
+  payload-camera:
+    image: camera:latest
+    volumes:
+      - payload:/app/data
+      #- private:/app/images
+    networks:
+    my_network:
+        ipv4_address: 172.30.0.11
+    ports:
+      - 5050:5050
+    
+networks:
+  my_network:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/20
+
+volumes:
+  payload:  
+#private:
+  sharepoint:

@@ -39,7 +39,7 @@ Then install the **Docker Compose** plugin by following this guide :
 [https://docs.docker.com/compose/install/linux/](https://docs.docker.com/compose/install/linux/)
 
 
-⚠️We will be using the Docker Compose V2, as V1 is deprecated, i.e. `docker compose` without the hyphen.⚠️
+> ⚠️We will be using the Docker Compose V2, as V1 is deprecated, i.e. `docker compose` without the hyphen.
 
 
 ## 2 Clone the git 

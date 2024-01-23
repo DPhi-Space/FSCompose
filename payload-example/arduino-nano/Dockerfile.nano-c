@@ -1,0 +1,15 @@
+ARG VARIANT="22.04"
+FROM ubuntu:${VARIANT} as base
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential
+
+COPY   ./payload-nano.c ./payload-nano.c
+
+RUN  gcc ./payload-nano.c -o payload-nano
+
+CMD  ./payload-nano

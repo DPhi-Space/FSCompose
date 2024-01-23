@@ -172,5 +172,125 @@ This time, enjoy both the LED show and successfully finishing the necessary inte
 
 🎉🥳🛰️
 
+## Bonus: Let's *C* the LED show
+
+The payload controller is a simple python script, but it can be written in any language. Let's say we want to write it in C. We can do so by writing the following code : 
+
+> This example is both for demonstrating the flexibility of the FSCompose suite and for apeasing the hardcore embedded systems C fans out there. 
+
+
+```c
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    const char *port = "/dev/ttyACM0";
+    int serial_port = open(port, O_RDWR);
+
+    if (serial_port < 0) {
+        perror("Error opening serial port");
+        return 1;
+    }
+
+    // Set serial port settings
+    struct termios tty;
+    memset(&tty, 0, sizeof(tty));
+    if (tcgetattr(serial_port, &tty) != 0) {
+        perror("Error getting serial port attributes");
+        close(serial_port);
+        return 1;
+    }
+
+    cfsetospeed(&tty, B115200);
+    cfsetispeed(&tty, B115200);
+
+    tty.c_cflag &= ~PARENB; // No parity
+    tty.c_cflag &= ~CSTOPB; // One stop bit
+    tty.c_cflag &= ~CSIZE;  // Clear character size mask
+    tty.c_cflag |= CS8;     // 8 data bits
+    tty.c_cflag &= ~CRTSCTS; // No hardware flow control
+    tty.c_cflag |= CREAD | CLOCAL; // Enable reading and ignore modem control lines
+
+    // Set input mode (non-canonical, no echo, ...)
+    tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+
+    // Set output mode (raw output)
+    tty.c_oflag &= ~OPOST;
+
+    // Apply settings
+    if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
+        perror("Error setting serial port attributes");
+        close(serial_port);
+        return 1;
+    }
+
+    // Write a specific byte to the serial port
+    unsigned char byte_to_write = 0x01;
+    while(byte_to_write < 0x08){
+        ssize_t bytes_written = write(serial_port, &byte_to_write, 1);
+
+        if (bytes_written < 0) {
+            perror("Error writing to serial port");
+        } else {
+            printf("Successfully wrote %zd bytes to %s\n", bytes_written, port);
+        }
+        byte_to_write++;
+    }
+    // Close the serial port
+    close(serial_port);
+
+    return 0;
+}
+
+```
+
+So let's go through the same steps as before, but this time with the C code.
+### Direct Interfacing
+Let's compile the code and run it : 
+
+```bash
+$ gcc payload-nano.c -o payload-nano
+$ ./payload-nano
+```
+
+### Containarized Interfacing
+Of course, we'll need to adapt the docker file accordingly: 
+
+```docker
+ARG VARIANT="22.04"
+FROM ubuntu:${VARIANT} as base
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential
+
+COPY   ./payload-nano.c ./payload-nano.c
+
+RUN  gcc ./payload-nano.c -o payload-nano
+
+CMD  ./payload-nano
+```
+
+Now we are ready to build the docker image and run it : 
+
+```bash
+$ docker build -f Dockerfile.nano -t nano .
+$ docker run --device /dev/ttyACM0 nano
+```
+
+### FSCompose Interfacing
+ 
+
+As before, we'll need to uplink the files to the **fsw** and update the `docker-compose.yml` file. The steps are the same as for the python script, so we'll skip them. 
+
+🎉🥳🛰️ Congratulations! You have successfully integrated (again) your payload with the FSCompose suite! 🎉🥳🛰️
+
+
 
 

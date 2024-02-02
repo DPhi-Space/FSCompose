@@ -15,4 +15,4 @@ Welcome to the FSCompose User Guide for the DPhi Space Flight Software!
 ## Reporting Issues and Bugs 🐛
 Please report any issue, bug, warning or suggestions in the following link : 
 
-https://github.com/DPhi-Space/FSCompose/issues
+[https://github.com/DPhi-Space/FSCompose/issues](https://github.com/DPhi-Space/FSCompose/issues)

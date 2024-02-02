@@ -9,11 +9,13 @@ services:
     networks:
       my_network:
         ipv4_address: 172.30.0.4
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ubuntu
 
   fsw:
     image: jsilveira1409/fsw:latest
-    depends_on:
-      - gds
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - payload:/app/payload
@@ -21,6 +23,10 @@ services:
     networks:
       my_network:
         ipv4_address: 172.30.0.5
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == raspberrypi432
     
     command: ["./Compose", "-a", "172.30.0.4", "-p", "50000"]
 

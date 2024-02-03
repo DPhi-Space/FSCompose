@@ -82,6 +82,8 @@ while true; do
         docker compose down 
         docker stop clustergate-fsw-1
         docker stop clustergate-gds-1
+        sleep 2
+        docker network rm clustergate_my_network
         break
     fi
 done

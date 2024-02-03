@@ -1,6 +1,12 @@
 # Setup
+## WSL v2 
+Unfortunately, Docker Desktop for Windows does not support WSL v1. However, you can use Docker Desktop for Windows with WSL v2. To do so, follow the guide below:
 
-We provide a setup script that will take care of the necessary dependencies for you. Execute with admin privilege : 
+[https://docs.docker.com/desktop/windows/wsl/](https://docs.docker.com/desktop/windows/wsl/)
+
+
+## Linux 
+For Linux, we provide a setup script that will take care of the necessary dependencies for you. Execute with admin privilege : 
 
 ```bash
 sudo ./setup.sh

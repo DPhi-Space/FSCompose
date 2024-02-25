@@ -17,8 +17,6 @@ Get-NetTCPConnection -LocalPort 5000
 sudo netstat -tulpn | grep :5000
 ```
 
-## Create new Payload
-
 ## Data Folder
 
 The payload defined in the Docker Compose will have a shared folder with the main FS container. The folder is mounted at `data/` inside the Payload container, and should be used for the data that needs to be downlinked. 
@@ -28,10 +26,15 @@ The payload defined in the Docker Compose will have a shared folder with the mai
 This folder is used to share files between Payload Containers. It is mounted at `sharepoint/` inside the Payload container.  
 
 ## Uplink Files from GDS to Data Folder
-Before we can start our Payload Container, we need to uplink it's Dockerfile and necessary files to the core Flight Software, through the GDS. Once this is done, we can build the Container on the fly and then start it. 
+Before we can start our Payload Container, we need to uplink the following to the FS: 
+
+- The Dockerfile to build the Payload Container
+- The necessary files to be used by the Payload Container, such as scripts, configuration files, etc.
+
+This is done through the GDS. Once this is done, we can build the Container on the fly and start it. 
 
 
-To uplink files from the GDS to the data folder of your payload, first we need to transfer the file to the core software, and then access it through the payload docker container: 
+To uplink files from the GDS to the data folder of your payload, first we need to transfer the file to the FS, and then access it through the Payload Docker Container: 
 
 ### Uplink to the Core Software
 First we upload the file to the FS. Go to the **Uplink** Tab and and type the following destination path:
@@ -60,11 +63,12 @@ Now that we have everything we need on board, it is time to build the Docker Con
 With the arguments above, this will execute the following bash command:
 
    ```bash
-   docker build -f Dockerfile.payload1 -t payload1:latest .
+   docker build -f Dockerfile.payload1 -t payloadserial:latest .
    ```
-This might take sometime, depending on the Container being built. You can check the correct execution of this command on the **Events** Tab. A build log will be created with the output of the command above. In this example it is named `payload1_build.log` and can be found under the `app/` folder in the **fsw** container.
 
+It will build the Docker Container using the `Dockerfile.payload1` file. The `-f` flag indicates the Dockerfile name, which needs to coincide with the one we uplinked in the previous step. The `-t` flag tags the image with the name `payloadserial:latest`. 
 
+This might take sometime, depending on the size of the Container being built. You can check the correct execution of this command on the **Events** Tab once it's done. A build log will be created with the output of the command above. In this example it is named `payloadserial_build.log` and can be found under the `app/` folder in the **fsw** container. The log's name is the same as the tag of the image plus `_build.log`, so if you change the tag, the log's name will also change.
 
 >⚠️ You can verify the correct execution of the command in the **Events** tab: 
 
@@ -76,9 +80,11 @@ This might take sometime, depending on the Container being built. You can check 
 
 Last step before we can start the Payload Container. We need to add the service to the `docker-compose.yml` file. As this is payload and setup dependent, each payload service definition might be different. We provide a template that you can modify as you see fit : 
 
+>⚠️ This step is a hotfix and will be automated in the future. Payload Providers won't need to do this in the future.  
+
 ```yaml
 
-  payload-service:
+  payload:
     image: payloadserial:latest
     volumes:
       - payload:/app/data
@@ -92,17 +98,17 @@ Last step before we can start the Payload Container. We need to add the service 
 ```
 The different configurations are : 
 
-- `payload-service:` this is the service name, which you will as an argument in the GDS GUI to start and stop the container.
+- `payload:` this is the service name, which you will as an argument in the GDS GUI to start and stop the container.
 - `image: payloadserial:latest` this is the container image that should be run when starting this service. This is set when you build the container, after sending the `dockerManager.BuildPayload` command (previous step).
 - `volumes:` this defines the (persistant) shared previously mentionned. Do not remove them, but you can add extra ones if needed.
-- `networks:` defines the ip address of this service in the docker network. You can modify it if needed.
-- `devices:` this is probably the most important setting, as it exposes the serial device of the host computer running the whole docker compose suite to this specific service. Meaning that, if you have an arduino connected to `/dev/ttyACM0` in the host computer, you can forward that port to this service by defining and rename it to `/dev/ttyUSB0`(so you don't have to adapt the port's name inside the service). 
+- `networks:` defines the IP address of this service in the docker network. You can modify it if needed.
+- `devices:` this is probably the most important setting, as it exposes the serial device of the host computer running the whole docker compose suite to this specific service. Meaning that, if you have an arduino connected to `/dev/ttyACM0` in the host computer, you can forward that port to this service by defining and rename it to `/dev/ttyUSB0`(so you don't have to adapt the port's name inside the service, script or executable). 
 
 Once you finish configuring this, uplink the `docker-compose.yml` file to the `/app` folder in the FS as shown below:
 
 ![Alt text](imgs/docker-compose.png)
 
-Now you are ready to rumble.
+Now you are ready to start the Payload Container.
 
 ## Start and Stop the Payload Container
 
@@ -136,5 +142,8 @@ Press the **StopCommand** button to stop the Payload Container.
 When start or building docker containers, two log files are created : 
 
    
+
+## Next Steps
+[Controlling an Arduino Nano](./sections/examples/nano/ex-nano.md)
 
 

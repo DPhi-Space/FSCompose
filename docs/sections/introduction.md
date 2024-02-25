@@ -43,4 +43,4 @@ Once the file is in the shared folder, we can directly access it from the *paylo
 
 ## Next Steps
 
-[Setup](./sections/setup.md)
+[Setup](./setup.md)

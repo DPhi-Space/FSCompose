@@ -131,7 +131,6 @@ If it fails, you will see the following Event:
 >⚠️ To examine the logs and find out why it failed, follow the **Check Logs** Section below.
 
 
-
 Press the **StopCommand** button to stop the Payload Container.
 
 
@@ -144,6 +143,6 @@ When start or building docker containers, two log files are created :
    
 
 ## Next Steps
-[Controlling an Arduino Nano](./sections/examples/nano/ex-nano.md)
+[Controlling an Arduino Nano](./examples/nano/ex-nano.md)
 
 

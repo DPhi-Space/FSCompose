@@ -1,6 +1,11 @@
 # Setup
 
-As the FSCompose software suite uses Docker Engine for the containarized applications, we need to install Docker and Docker Compose. The following guide will help you install the necessary dependencies for your OS.
+As the FSCompose software suite uses Docker Engine for the containarized applications, we need to install Docker and Docker Compose. The following guide will help you install the necessary dependencies for your OS. Start by cloning the FSCompose repository and then follow the guide for your OS.
+
+```bash 
+   git clone https://github.com/DPhi-Space/FSCompose.git
+   cd FSCompose
+```
 
 
 ## WSL v2 
@@ -69,13 +74,13 @@ First, pull the necessary services (the FS and the GDS containers) from Docker H
 
 
    ```bash
-   docker compose pull fsw gds
+   sudo docker compose pull fsw gds
    ```
 
 Now we are ready to run it. We will first start the FS and the GDS containers:
    
    ```bash   
-   docker compose up -d fsw gds
+   sudo docker compose up -d fsw gds
    ```
       
 - **fsw** is the FS container. It will connect through TCP to the GDS.

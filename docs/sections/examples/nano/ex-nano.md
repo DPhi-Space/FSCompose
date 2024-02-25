@@ -113,12 +113,12 @@ Now run the Docker Container again and enjoy the LED show.
 Now the FSCompose suite. Follow the [setup guide](../../setup.md) if not already done to get started with installation. Let's start by launching the FSCompose suite : 
 
 ```bash 
-$ docker compose up -d fsw gds
+$ sudo ./run.sh
 ```
 
 This will launch the core Flight Software (FS) and the GDS GUI to interface with it at the following address : 
 
-[http://127.0.0.1:5000/]
+[http://127.0.0.1:5000/]()
 
 
 Open it on your browser of choice. Let's upload the files we need to build the Docker Image for our payload. Go to the **Uplink** Tab and select the `payload-nano.py` script and the `Dockerfile.nano` and set the *Destination folder* to `/app/payload`, as shown below:
@@ -163,7 +163,7 @@ Let's build the payload inside the **fsw** now. Go to the **Commanding** Tab and
 
 ![Alt text](image-4.png)
 
-The first argument is the name of the Dockerfile we uploaded, in our case it is `Dockerfile.nano`. The second argument is the name of the Container, as we have defined in the `docker-compose.yml` file. 
+The first argument is the name of the Dockerfile we uploaded, in our case it is `Dockerfile.nano`. The second argument is the name of the Container Image, as we have defined in the `docker-compose.yml` file. In our case, it is `nano`.
 If the build has succeded, we are ready to start the container. Send the *dockerManager.Start* command with the following argument: 
 
 ![](image-5.png)

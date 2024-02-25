@@ -1,9 +1,8 @@
 version: '3'
-#name: clustergate
 services:
 
   gds:
-    image: jsilveira1409/gds:latest
+    image: dphispace/gds:latest
     ports:
       - "127.0.0.1:5000:5000" # Expose GUI on port 5000
     networks:
@@ -11,7 +10,7 @@ services:
         ipv4_address: 172.30.0.4
 
   fsw:
-    image: jsilveira1409/fsw:latest
+    image: dphispace/fsw:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - payload:/app/payload
@@ -25,7 +24,6 @@ services:
 ##############################################################
 ########################## Payloads ##########################
 ##############################################################
-     
      
 networks:
   my_network:

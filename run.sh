@@ -40,9 +40,10 @@ cleanup() {
     docker compose down
     echo "Done!"
 }
-url="127.0.0.1:5000"
 
-docker compose -p clustergate up -d fsw gds
+docker compose pull fsw gds
+
+docker compose -p clustergate up --force-recreate -d fsw gds
 
 echo "Starting GDS GUI..."
 for i in {5..1}; do
@@ -52,13 +53,15 @@ done
 
 echo "Done!"
 
+url="http://127.0.0.1:5000/"
+
 echo "Trying to open GDS GUI in browser..."
-if command -v xdg-open > /dev/null; then
-    xdg-open "$url"
-elif command -v gnome-open > /dev/null; then
-    gnome-open "$url"
-elif command -v kde-open > /dev/null; then
-    kde-open "$url"
+if command -v xdg-open > /dev/null 2>&1; then
+    xdg-open "$url" 2>/dev/null
+elif command -v gnome-open > /dev/null 2>&1; then
+    gnome-open "$url" 2>/dev/null
+elif command -v kde-open > /dev/null 2>&1; then
+    kde-open "$url" 2>/dev/null
 else
     # Check if the terminal supports ANSI color codes
     if [ -t 1 ] && command -v tput &> /dev/null; then
@@ -75,6 +78,7 @@ else
         echo "$url"
     fi
 fi
+
 
 while true; do
     read -p "Press 'q' to quit: " q

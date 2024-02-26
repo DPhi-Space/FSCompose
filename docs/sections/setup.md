@@ -91,4 +91,4 @@ Now we are ready to run it. We will first start the FS and the GDS containers:
 
 Now the next step is to learn how to use the GDS GUI : 
 
-[GDS guide](./gds.md)
+[Ground Data Segment guide](./gds.md)

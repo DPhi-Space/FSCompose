@@ -58,10 +58,16 @@ url="http://127.0.0.1:5000/"
 echo "Trying to open GDS GUI in browser..."
 if command -v xdg-open > /dev/null 2>&1; then
     xdg-open "$url" 2>/dev/null
+    echo "Visit the following URL in your web browser:"
+    echo "$url"
 elif command -v gnome-open > /dev/null 2>&1; then
     gnome-open "$url" 2>/dev/null
+    echo "Visit the following URL in your web browser:"
+    echo "$url"
 elif command -v kde-open > /dev/null 2>&1; then
     kde-open "$url" 2>/dev/null
+    echo "Visit the following URL in your web browser:"
+    echo "$url"
 else
     # Check if the terminal supports ANSI color codes
     if [ -t 1 ] && command -v tput &> /dev/null; then

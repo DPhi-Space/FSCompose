@@ -6,12 +6,13 @@ In this example, we will be controlling an Arduino Nano from within the FSCompos
 
 ![](nano.jpeg)
 
-The Arduino is quite a simple subsystem in this example. It receives messages of 1 byte in size and executes a LED pattern according to the byte received. It has a total of 7 patterns. The code can be found under `payload-example/arduino-nano/`.
+The Arduino is quite a simple subsystem in this example. It receives messages of 1 byte in size and executes a LED pattern according to the byte received. It has a total of 7 patterns. The code can be found under `payload-example/arduino-nano/nano.ino`.
 
-The Arduino communicates through serial with a Python script. We will go through the three expected stages of development : 
+The Arduino communicates through serial with a Python script. We will go through the three expected stages of development for a Payload Provider, which are: 
+
 1. **Direct interfacing** with the script running on the PC.
 2. **Containarized interfacing**, where the script runs inside a Docker Container.
-3. **FSCompose interfacing**, where the previous Docker Container is uploaded to the FSCompose, built and then ran from the GDS GUI.
+3. **FSCompose interfacing**, where the previous Docker Container and necessary files are uploaded to the FSCompose, built and then ran from the Ground Data Segment (GDS) GUI.
 
 Let's get started.
 
@@ -39,7 +40,7 @@ It is the standard Python way to interface with a serial device. Almost a direct
 Now, run the script by executing the following in the terminal: 
 
 ```bash
-python3 payload-nano.py
+$ python3 payload-nano.py
 ```
 
 >⚠️ Make sure you have the necessary permissions to access the serial port. If, when running the script, you get the following error : 
@@ -48,7 +49,7 @@ python3 payload-nano.py
 >```
 > Then run the following command : 
 > ```bash
->   sudo chmod +666 /dev/ttyACM0
+> $ sudo chmod +666 /dev/ttyACM0
 >```
 
 
@@ -76,11 +77,24 @@ COPY    ./payload-nano.py ./payload.py
 CMD     python3 -u payload.py 
 ```
 
-Inside the folder containing both the script and the Dockerfile (in our case `/payload-example/arduino-nano/`), run the following in the terminal to build the image: 
+A few things to note from this Dockerfile:
+
+- We are using Ubuntu 22.04 as the base image, as defined in the first two lines.
+- We are setting the */app/* directory as the working directory, which means that all the commands will be executed from this directory.
+- We are installing the necessary dependencies for the Python script to run, which are `python3` and `python3-pip`. We are also installing `pyserial` through `pip`.
+- We are copying the `payload-nano.py` script to the */app/* directory and renaming it to `payload.py`. This script needs to be in the same directory as the Dockerfile, as it is being copied to the Docker image, which is why we will later uplink it to the same folder, *i.e.* `/app/payload/`in the FSCompose suite.
+- We are running the script with the `-u` flag, which means that the output will be unbuffered. This is useful for debugging purposes, as it will print the output to the terminal as soon as it is generated.
+
+
+Inside the folder `payload-example/arduino-nano/` containing both the script `payload-nano.py` and the Dockerfile `Dockerfile.nano`, run the following in the terminal to build the image: 
 
 ```bash
 $ docker build -f Dockerfile.nano -t nano .
 ```
+A few things to note from this command:
+- The `-f` flag is used to specify the name of the Dockerfile to be used. In this case, it is `Dockerfile.nano`.
+- The `-t` flag is used to tag the image. In this case, we are tagging it as `nano`. This is the name we will use to run the container later on.
+- The `.` at the end of the command is used to specify the build context. This is the path to the directory containing the Dockerfile and the script. In this case, it is the current directory.
 
 And after it successfully builds, we can run it by executing the following in the terminal : 
 
@@ -88,15 +102,18 @@ And after it successfully builds, we can run it by executing the following in th
 $ docker run nano
 ```
 
-This will raise an error in the Python, as we have not exposed the serial device to the container for it to interface with the arduino. The correct command is : 
+This will raise an error in the Python script, as we have not exposed the serial device to the container for it to interface with the arduino. 
+The correct command is : 
 
 ```bash
 $ docker run --device /dev/ttyACM0 nano
 ```
 
+This will expose the serial device `/dev/ttyACM0` to the container, allowing the Python script to interface with the Arduino, which is connected to the host computer.
+
 >⚠️ Once again, make sure the serial device you are exposing to the container is the correct one. 
 
-Let's say in the Python script we set the serial device to be `/dev/ttyACM0`, but the serial device in the PC keeps changing for whatever reason. We can map it to always be `/dev/ttyACM0` inside the container by running 
+Let's say in the Python script we set the serial device to be `/dev/ttyACM0`, but the serial device in the PC keeps changing for whatever reason. We can map it to always be `/dev/ttyACM0` inside the container by running :
 
 ```bash
 $ docker run --device /dev/ttyUSB0:/dev/ttyACM0 nano
@@ -116,26 +133,49 @@ Now the FSCompose suite. Follow the [setup guide](../../setup.md) if not already
 $ sudo ./run.sh
 ```
 
-This will launch the core Flight Software (FS) and the GDS GUI to interface with it at the following address : 
+This will launch the core Flight Software (FS) and the Ground Data Segment (GDS) GUI to interface with it at the following address : 
 
 [http://127.0.0.1:5000/]()
 
 
-Open it on your browser of choice. Let's upload the files we need to build the Docker Image for our payload. Go to the **Uplink** Tab and select the `payload-nano.py` script and the `Dockerfile.nano` and set the *Destination folder* to `/app/payload`, as shown below:
+If it did not open automatically, open it on your browser of choice. Let's upload the files we need to build the Docker Image for our payload, which can be found under the `payload-example/arduino-nano/` folder:
+
+- `payload-nano.py`
+- `Dockerfile.nano`
+
+Go to the **Uplink** Tab and select the `payload-nano.py` script and the `Dockerfile.nano` and set the **Destination folder** to `/app/payload`, as shown below:
 
 ![](image.png)
 
+We need to set the destination folder to `/app/payload` because it is the folder dedicated to the payload. Both files need to be in the same folder, as the Dockerfile will copy the script to the image, as previously mentionned.
 
-Uplink the files by pressing on the orange *Uplink* button. You can verify the correct uplink in the **Events** Tab, which should show the following events: 
+Uplink the files by pressing on the orange **Uplink** button. You can verify the correct uplink in the **Events** Tab, which should show the following events: 
 
 ![](image-1.png)
 
 
-Now we are almost ready to build it. One last detail, we need to update the Docker Compose file to include this new service. Remember, it is the **fsw** Container that will manage your Payload Container, and it has an internal copy of the `docker-compose.yml` file, which needs to be updated to include the new payload. All of this will be automated when your payload is in space, but for testing and development freedom reasons, we leave this up to the developers during the development phase. Let's append the following code to the `docker-compose.yml` file : 
+Now we are almost ready to build it. One last detail, we need to update the Docker Compose file to include this new service. Remember, it is the **fsw** Container, which is where the DPhi Space FS resides, that will manage your Payload Container, and it has an internal copy of the `docker-compose.yml` file. This needs to be updated to include the new payload. 
 
->⚠️ This step is a hotfix and will be automated in the future. Payload Providers won't need to do this in the future.
 
-```docker
+Let's append the following code to the `docker-compose.yml` file : 
+
+>⚠️ All of this will be automated when your payload is in space, but for testing and development freedom reasons, we leave this up to the developers during the development phase. This step is a hotfix and will be automated in the future. Payload Providers won't need to do this in the future.
+
+
+```yaml
+# FS container and GDS container definitions...
+version: '3'
+services:
+
+  gds:
+    # (...)
+  fsw:
+    # (...)
+
+##############################################################
+########################## Payloads ##########################
+##############################################################
+
   payload-nano:
     image: nano:latest
     volumes:
@@ -145,7 +185,11 @@ Now we are almost ready to build it. One last detail, we need to update the Dock
       my_network:
         ipv4_address: 172.30.0.10
     devices:
-      - "/dev/ttyACM0:/dev/ttyACM0"           
+      - "/dev/ttyACM0:/dev/ttyUSB0"           
+
+
+# Network and partitioning definitions...
+
 ```
 
 The *caveats* are the following: 
@@ -159,7 +203,7 @@ Now we will uplink the file to the `/app` folder, as such:
 
 ![Alt text](image-2.png)
 
-Let's build the payload inside the **fsw** now. Go to the **Commanding** Tab and send the *dockerManager.BuildPayload* command with the arguments shown below:
+Let's build the payload inside the **FS** now. Go to the **Commanding** Tab and send the *dockerManager.BuildPayload* command with the arguments shown below:
 
 ![Alt text](image-4.png)
 
@@ -292,6 +336,8 @@ As before, we'll need to uplink the files to the **fsw** and update the `docker-
 Congratulations! You have successfully integrated (again) your payload with the FSCompose suite!
 
 
+## Debugging Errors
+If you encounter any errors, please follow the [Check Logs](../../gds.md#check-logs) to downlink the necessary log files from building, starting and stopping the Payload Container.
 
 ## Next Steps
 [Controlling a PiCamera](../pi-camera/ex-pi-camera.md)

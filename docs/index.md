@@ -5,7 +5,7 @@ Welcome to the FSCompose User Guide for the DPhi Space Flight Software!
 ## Overview
 1.  [Introduction](./sections/introduction.md)
 2.  [Setup](./sections/setup.md)
-3.  [GDS GUI](./sections/gds.md)
+3.  [Ground Data Segment GUI](./sections/gds.md)
 
 
 ## Examples and Case Studies

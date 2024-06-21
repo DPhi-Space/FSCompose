@@ -83,9 +83,13 @@ print_and_log(f"Tests failed    : {test_results.count(False)}")
 log_file.close()
 
 try:
-    shutil.copy('log.txt', '/data/log.txt')
+    shutil.copy('log.txt', './data/log.txt')
 except Exception as e:
     # Open the log file again to log the error
     with open('log.txt', 'a') as log_file:
         log_file.write(f"Data directory not mounted. Failed to move log.txt.\n")
     print(f"Data directory not mounted. Failed to move log.txt.")
+
+
+while True:
+    time.sleep(10)

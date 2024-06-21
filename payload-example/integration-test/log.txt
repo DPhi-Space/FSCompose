@@ -15,3 +15,4 @@ UNKNOWN                        | Unknown command                                
 Total tests     : 3
 Tests passed    : 3
 Tests failed    : 0
+Data directory not mounted. Failed to move log.txt.

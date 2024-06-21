@@ -1,0 +1,13 @@
+{
+    "providers": [
+        {
+            "name": "DiamondDogs",
+            "devices": [
+                "/dev/ttyACM0"
+            ],
+            "payloads": [
+                "camera"
+            ]
+        }
+    ]
+}

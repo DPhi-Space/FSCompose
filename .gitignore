@@ -1,2 +1,3 @@
 _archive
-.metals/
+.metals/./archive/*
+.archive/*

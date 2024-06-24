@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+
 text="
                                                                                                              
                                                                                                              
@@ -18,7 +20,7 @@ text="
                                                                                                              
                                                                                                              
     ####                   ####                     ##                      ####                   ######    
-   #    #                  #    #                  #  #                   ##    ##                           
+   #                       #    #                  #  #                   ##    ##                           
     ####                   #   ##                 ##  ##                 ##                        ######    
         ##                 ####                   ######                  #     ##                           
    ######                  #                     ##    ##                  ######                  ######    
@@ -38,6 +40,9 @@ export GDS_PORT=5050
 
 export ORIGINAL_DIR=$(pwd)
 
+echo "Cleaning before deploying..."
+docker stop fsw
+docker service rm pdb-api logger 
 
 cleanup() {
     echo "Exiting script. Stopping FS..."
@@ -61,6 +66,7 @@ sleep 2
 ./deploy/apps.sh pdb_users
 
 
+
 while true; do
     echo ""
     echo "######################################"
@@ -70,6 +76,7 @@ while true; do
     read q
     if [ "$q" = "q" ]; then
         set +e
+        docker service rm logger pdb-api
         break
     fi
 done

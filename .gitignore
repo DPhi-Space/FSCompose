@@ -1,3 +1,5 @@
 _archive
 .metals/./archive/*
 .archive/*
+deploy/*_pdb.json
+deploy/*.json

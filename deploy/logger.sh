@@ -3,7 +3,9 @@
 set -e
 
 create(){
+
     docker volume create logs
+    docker pull ops.dphi.space/logger:latest
     
     docker service create \
         --name logger \

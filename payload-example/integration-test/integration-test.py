@@ -73,7 +73,7 @@ for command_name, result in zip(commands.keys(), test_results):
     expected_msg = commands[command_name][EXPECTED_MSG]
     result_str = "Passed" if result else "Failed"
     print_and_log(f"{command_name.upper():30} | {expected_msg:50} | {result_str:10}")
-
+ 
 print_and_log("-" * 95)
 print_and_log(f"Total tests     : {len(test_results)}")
 print_and_log(f"Tests passed    : {test_results.count(True)}")

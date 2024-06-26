@@ -6,6 +6,5 @@ COPY . /app/
 
 RUN pip install pyserial
 
-EXPOSE 80
 
 CMD ["python3","-u", "integration-test.py"]

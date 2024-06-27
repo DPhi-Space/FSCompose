@@ -27,7 +27,33 @@ sudo ./setup.sh
 > ``` 
 
 # Run the FSCompose
-To start the FSCompose, run the following script. 
+Before starting the FSCompose, the user needs to enter the following information into **deploy/providers.json** configuration file:
+
+- **name**: this needs to match the login username for the GS.
+- **devices**: this will be the device attached to the Docker Containers the user will be managing with FSCompose. It allows the Docker Container to communicate with the outside world on the given device. It can be empty.
+- **payloads**: name of the payload.
+
+
+Below is an example on how to fill it up:
+
+```json
+{
+    "providers": [
+        {
+            "name": "DiamondDogs",
+            "devices": [
+                "/dev/ttyACM0"
+            ],
+            "payloads": [
+                "camera"
+            ]
+        }
+    ]
+}
+```
+
+Now we are ready to start the FSCompose, run the following script. 
+
 ```bash
 ./run.sh
 ```
@@ -37,10 +63,10 @@ To start the FSCompose, run the following script.
 > sudo chmod +x run.sh
 > ``` 
 
-This will launch the Flight Software (FS) suite, which we will interface through tcp with a Python script (_main.py_). We will get into this in the [SECTION](TODO)
+This will launch the Flight Software (FS) suite, which we will interface through tcp with a Python script (_main.py_). We will get into this in the [Flight Software](../4.FS/README.md)
 
 ## Next Step
 
-Now the next step is to learn how to use the GDS GUI : 
+Now the next step is to learn how to use the Ground Segment: 
 
-[Ground Data Segment guide](./gds.md)
+[Ground Segment](../3.GroundSegment/README.md)

@@ -44,4 +44,4 @@ Once the file is in the shared folder, we can directly access it from the *paylo
 
 ## Next Steps
 
-[Setup](./setup.md)
+[Setup](../2.Setup/README.md)

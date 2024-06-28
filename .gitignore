@@ -1,2 +1,9 @@
 _archive
-.metals/
+.metals/./archive/*
+.archive/*
+deploy/*_pdb.json
+deploy/*.json
+payloads_files.zip
+downlink.zip
+venv/*
+__pycache__/*

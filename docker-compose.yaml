@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  gds:
+    image: ops.dphi.space/gds:latest
+    ports:
+      - "127.0.0.1:5050:5000"  # Adjust port mapping if needed
+    networks:
+      - clustergate
+
+  fsw:
+    image: ops.dphi.space/fsw:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - volume_provider:/app/payload
+    networks:
+      - clustergate
+    depends_on:
+      - gds
+    command: ["./Compose", "-a", "gds:50000", "-p", "50000"]
+
+networks:
+  clustergate:        
+
+volumes:
+  volume_provider:

@@ -1,5 +1,0 @@
-Payload1: Running payload1.py iteration 1
-Payload1: Running payload1.py iteration 2
-Payload1: Running payload1.py iteration 3
-Payload1: Running payload1.py iteration 4
-Payload1: Running payload1.py iteration 1

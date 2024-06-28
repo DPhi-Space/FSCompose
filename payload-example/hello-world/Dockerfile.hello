@@ -1,5 +1,3 @@
-FROM python:3.9-slim
+FROM alpine:latest
 
-WORKDIR /app
-
-CMD echo "Hello World" > data/test.txt
+CMD echo "Hello World"

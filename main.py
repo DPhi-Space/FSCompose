@@ -10,7 +10,9 @@ from getpass import getpass
 CMD_FILE = 'cmds-clients.bin'
 
 def login(username, pwd):
-    url = "http://127.0.0.1:8000/api/login"
+    #url = "http://127.0.0.1:8000/api/login"
+    url = "http://ops.dphi.space:8000/api/login"
+    
     data = {"username": username, "password": pwd}
     response = requests.post(url, json=data)
 
@@ -21,10 +23,10 @@ def login(username, pwd):
         print("Login failed")
 
 def get_zip(token):
-    url = "http://127.0.0.1:8000/api/upload_zip/"
+    #url = "http://127.0.0.1:8000/api/upload_zip/"
+    url = "http://ops.dphi.space:8000/api/upload_zip/"
     token_str = f"Token {token}"
     headers = {"Authorization": token_str}
-    print(headers)
     response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
@@ -36,14 +38,15 @@ def get_zip(token):
         print("Failed to retrieve zip")
         return False
         
-def send_zip():
-    url = "http://127.0.0.1:8000/api/upload_zip/"
-    #file_path = '/home/jsilveira/DPhi/GS/django_project/downlink.zip'
+def send_zip(token):
+    #url = "http://127.0.0.1:8000/api/upload_zip/"
+    url = "http://ops.dphi.space:8000/api/upload_zip/"
     file_path = './downlink.zip'
     if os.path.exists(file_path):
         m = MultipartEncoder(fields={'file': (os.path.basename(file_path), open(file_path, 'rb'))})
+        token_str = f"Token {token}"
         headers = {
-            "Authorization": "Token 28db0f69442675fc29fea3fcb3b7d44d861d30c7",
+            "Authorization": token_str,
             "Content-Type": m.content_type
         }
         
@@ -52,7 +55,7 @@ def send_zip():
         if response.status_code == 200:
             print("Zip sent successfully")
         else:
-            print("Failed to send zip")
+            print(f"Failed to send zip {response.status_code}")
     else:
         print("The downlink.zip file does not exist")
 
@@ -84,7 +87,7 @@ if __name__ == "__main__":
                     
                 elif key.lower() == 's':
                     print('Sending zip to GS...')  
-                    send_zip()
+                    send_zip(token['token'])
                 elif key.lower() == 'q':
                     print('Stopping FS Interface...')  
                     set_current_state(STATES['EXIT'])

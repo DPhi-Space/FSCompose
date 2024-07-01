@@ -90,6 +90,5 @@ except Exception as e:
         log_file.write(f"Data directory not mounted. Failed to move log.txt.\n")
     print(f"Data directory not mounted. Failed to move log.txt.")
 
-
 while True:
     time.sleep(10)

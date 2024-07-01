@@ -1,9 +1,8 @@
 {
     "providers": [
         {
-            "name": "DiamondDogs",
-            "devices": [
-            ],
+            "name": "jsilveira",
+            "devices": ["/dev/ttyACM0"],
             "payloads": [
                 "camera"
             ]

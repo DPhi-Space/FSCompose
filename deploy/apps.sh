@@ -22,7 +22,6 @@ pdb_create_users(){
 
         docker cp ./deploy/${name}_pdb.json fsw:/app/payloads/${name}/user.json
         docker cp ../Apps/pdb/pdb_fun.py fsw:/app/payloads/${name}/pdb_fun.py
-        echo "Created PDB Client: $user_json"
         sleep 1
     done
 }

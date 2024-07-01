@@ -12,6 +12,7 @@ Welcome to the FSCompose User Guide for the DPhi Space Flight Software!
 
 ## Examples
 [Hello World](./6.Examples/Hello-World/README.md)
+[Serial Payload](./6.Examples/Serial-Payload/README.md)
 
 ## Reporting Issues and Bugs 🐛
 Please report any issue, bug, warning or suggestions in the following link : 

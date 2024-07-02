@@ -203,3 +203,32 @@ Which we can directly download and visualize. You should see the following :
 2024-06-28T19:27:41+00:00	DiamondDogs/	{"message":"Hello World"}
 ```
 
+
+```bash
+$ ./debug.sh
+```
+
+This will copy from the FS the files in your `app/data/` folder, which is where the Dockerfiles and scripts are transferred to, and also the log files of the Docker Images and Containers the FS tries to build and to execute:
+
+```bash
+$ ./deploy.sh
+Successfully copied 22kB to /home/DiamondDogs/DPhi/FSCompose/debug/
+
+Fetched the following files from FS:
+./debug/
+├── DiamondDogs
+│   ├── Dockerfile.serial
+│   ├── log.txt
+│   ├── pdb_fun.py
+│   ├── serial-test.py
+│   └── user.json
+├── logs-file-tree.log
+├── providers-file-tree.log
+├── serial-container.log
+├── serial-test.log
+├── unzip-logs.log
+└── zip-files.log
+
+1 directory, 11 files
+
+```

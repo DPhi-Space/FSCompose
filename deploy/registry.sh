@@ -3,7 +3,6 @@
 create(){
     docker service create \
         --name registry \
-        --constraint "node.hostname == $FSW_NODE" \
         --publish 5000:5000 \
         --network $CG_NETWORK \
         registry:2 

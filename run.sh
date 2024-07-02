@@ -76,7 +76,7 @@ while true; do
     read q
     if [ "$q" = "q" ]; then
         set +e
-        docker service rm logger pdb-api
+        docker service rm logger pdb-api registry
         break
     fi
 done

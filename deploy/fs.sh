@@ -40,6 +40,7 @@ create(){
     --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
     --mount type=volume,source=logs,target=/app/logs \
     $(./deploy/volume-creator.sh generate | tr -d '\n') ops.dphi.space/fsw:latest > /dev/null &
+    
     sleep 3
     docker cp deploy/providers.json fsw:/app/providers.json
     

@@ -1,6 +1,6 @@
 # Setup
 
-As the FSCompose software suite uses Docker Engine for the containarized applications, we need to install Docker and Docker Compose. The following guide will help you install the necessary dependencies for your OS. Start by cloning the FSCompose repository and then follow the guide for your OS.
+As the Flight Software Compose (FSCompose) suite uses Docker Engine for the containarized applications, we need to install Docker and Docker Compose. The following guide will help you install the necessary dependencies for your OS. Start by cloning the FSCompose repository and then follow the guide for your OS.
 
 ```bash 
    git clone https://github.com/DPhi-Space/FSCompose.git
@@ -27,9 +27,18 @@ sudo ./setup.sh
 > ``` 
 
 # Run the FSCompose
+
+To kick-off development, start by creating a new python environment and installing the necessary packages to run the local:
+
+```python
+    $ python3 -m venv venv
+    $ ./venv/bin/activate
+    $ pip3 install -r requirements.txt
+```
+
 Before starting the FSCompose, the user needs to enter the following information into **deploy/providers.json** configuration file:
 
-- **name**: this needs to match the login username for the GS.
+- **name**: this needs to match the login username for the GS Dashboard.
 - **devices**: this will be the device attached to the Docker Containers the user will be managing with FSCompose. It allows the Docker Container to communicate with the outside world on the given device. It can be empty.
 - **payloads**: name of the payload.
 
@@ -45,25 +54,28 @@ Below is an example on how to fill it up:
                 "/dev/ttyACM0"
             ],
             "payloads": [
-                "camera"
+                "ArduinoMega"
             ]
         }
     ]
 }
 ```
 
+To start the local deployment of DPhi Space Flight Software (FS), first login to our private Docker Registry. Use the same acount one would use to login into the GS Dashboard
+
+```bash
+$ docker login ops.dphi.space
+Username: [Username]
+Password: [Password]
+```
+
 Now we are ready to start the FSCompose, run the following script. 
 
 ```bash
-./run.sh
+$ python3 main.py
 ```
 
-> ⚠️ Again, check for execution permissions on it. If you get a *Permission denied* or *Command not found* error, run the following: 
->```bash
-> sudo chmod +x run.sh
-> ``` 
-
-This will launch the Flight Software (FS) suite, which we will interface through tcp with a Python script (_main.py_). We will get into this in the [Flight Software](../4.FS/README.md)
+It will request for your GS Dashboard login credentials, which are used to fetch the files you have uploaded to it. Once the credentials are validated, it will fetch the `payloads_files.zip`, pull the Docker Containers of the FSCompose from the private Docker registry, launch the FSCompose suite, and then start the FS Interface software to communicate with the FSCompose. We will get into the latter in the [Flight Software](../4.FS/README.md) section.
 
 ## Next Step
 

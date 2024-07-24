@@ -7,6 +7,9 @@ If you have not already cloned the repo, do so by running the following:
 ```bash
 $ git clone git@github.com:DPhi-Space/FSCompose.git
 $ cd FSCompose/
+$ python3 -m venv venv 
+$ . venv/bin/activate
+$ pip install -r requirements.txt
 ```
 
 
@@ -26,7 +29,7 @@ CMD echo "Hello World"
 We use the minimal and lightweight base image [Alpine Linux](https://hub.docker.com/_/alpine). Then, the `CMD echo "Hello World"` gets executed when we run the `docker run` command. Let's start by building the Docker Image from this Dockerfile:
 
 ```bash
-$ cd payload-example/hello-world/
+$ cd examples/hello-world/
 $ docker build -f Dockerfile.hello -t hello-world-local .
 ```
 
@@ -59,7 +62,7 @@ $ docker run hello-world-test
 > Hello World
 ```
 
-If everything went well you should see the *Hello World* output in the portal. 
+If everything went well you should see the *Hello World* output in the terminal. 
 
 At this points, we have locally validated that the Docker Container we want to run works. Let's integrate it in the FSCompose suite and run it inside it.
 
@@ -73,13 +76,8 @@ $ docker login ops.dphi.space
 > Password: [password]
 ```
 
-This will allow you to pull the pre-built Docker Images necessary to run the FS locally. Now, run the `./setup.sh` script:
+This will allow you to pull the pre-built Docker Images necessary to run the FS locally. 
 
-```
-$ ./setup.sh
-```
-
-While the setup gets ready, let's prepare the GS side.
 
 ### GS Setup
 The Ground Segment will be the interfaces users use to communicate with the Flight Software once Clustergate is deployed in Space. Therefore, for development and testing we will be using the same software suite, to validate the development and deployment pipeline.
@@ -88,18 +86,18 @@ Head to the [GS Dashboard](http://ops.dphi.space:8000/login/) and login with you
 
 ![alt text](./imgs/files.png)
 
-This tells the GS that the file is to be uplinked (*i.e.* sent to the satellite or to the local deployment of the FS, which are analogous) to the FS on the next communication window. The next step is to write a Command Sequence on the **Commander** tab to tell the FS when to build the Docker Image, and when to run the Docker Container from this built Image. As the Docker Container exits by itself, we do not need to stop it manually. Below is an example of Command Sequence:
+This tells the GS that the file is to be uplinked (*i.e.* sent to the satellite or to the local deployment of the FS, which are analogous) to the FS on the next communication window. The next step is to write a Command Sequence on the **Commander** tab to tell the FS when to build the Docker Image and run the Docker Container from this built Image. As the Docker Container exits by itself, we do not need to stop it manually. Below is an example of Command Sequence:
 
 ```
-R00:00:00 build Dockerfile.hello hello-world-test
-R00:00:20 start hello-container hello-world-test
+R00:00:00 build_start Dockerfile.hello hello-img hello-container
 ```
 
 For a more in detail exaplanation of the commands, check out the [Commander](../../3.GroundSegment/Commands.md) section
 
 This should result in the following:
 
-![alt text](image.png)
+![alt text](./imgs/cmdr.png)
+
 
 Hit **Compile**, and activate the Command Sequence in the *Command Files* list, to tell the GS to prepare this Command Sequence in the next communication window with the FS, by clicking on the **Inactive** button. The result is shown below:
 
@@ -109,15 +107,15 @@ Now everything is ready to run it on the FS.
 
 ### FS-GS Interface
 
-For a local deployment, we need a way to interface the GS and the local deployment of the FS. This is simply done by running the `main.py` python script:
+
+Now we are ready to run the FSCompose:
 
 ```python
 $ cd FSCompose/
 $ python3 main.py
 ```
 
-
-Enter your GS credentials so that it correctly interface with your session. Once the script interface is ready, you will see the following output: 
+Enter your GS credentials so that it correctly interface with your session. Once the local deployment of the FSCompose is ready, you will see the following output: 
 
 ```bash
 Connecting to  0.0.0.0 50000
@@ -125,6 +123,9 @@ Starting FS Interface
 Username: [username] 
 Password: [password]
 Login successful
+
+(...)
+
 Starting fs-interface...
 
 Press e to execute Command Sequence
@@ -135,7 +136,7 @@ Waiting for Instructions
 
 ```
 
-Now everything is ready. Press *e* to execute the Command Sequence we wrote before for the FS to build and start the Docker Image and Container. 
+Now everything is ready. Press **e** to execute the Command Sequence we wrote before for the FS to build and start the Docker Image and Container. 
 
 This will take a minute or two. The expected output is shown below:
 
@@ -164,7 +165,7 @@ Received File  downlink.zip
 Waiting for Instructions 
 ```
 
-Once we correctly receive the downlink.zip from the FS on the interface script, press *s* and enter to send it to the GS for processing:
+Once we correctly receive the downlink.zip from the FS on the interface script, press **s** and enter to send it to the GS for processing:
 ```
 Received File  downlink.zip
 Waiting for Instructions s
@@ -173,7 +174,7 @@ Zip sent successfully
 Waiting for Instructions 
 ```
 
-Heading back to the GS, we can see that new files appeared in the **On-Board Log Files** Section in the *Files* tab. Whenever a Docker Container is executed in the FS, it's standard output (*i.e.*, any *std::cout* in C++ or any *print()* in Python) will be captured and logged. 
+Congratulations! You have successfully run your first Docker Container with the FSCompose. It's output will be logged into a log file, which generates a text file every minute, which is longer than the whole Command Sequence we executed, which is why the logs generated by this Container will not be visible in the *Files On-Board Files* section in the GS just yet. However, if we run the experiment again, by executing the same Command Sequence and uplinking the `downlink.zip` as before, we can see that new files appeared in the **On-Board Log Files** Section in the *Files* tab. Whenever a Docker Container is executed in the FS, it's standard output (*i.e.*, any *std::cout* in C++ or any *print()* in Python) will be captured and logged. 
 
 ![alt text](./imgs/files-logs.png)
 
@@ -192,7 +193,7 @@ Zip sent successfully
 Waiting for Instructions 
 ```
 
-And press *s* in the `main.py` to send it to the GS. Now, back in the GS Dashboard, we will see the requested file appear in the **Downlinked Files** Section of the *Files* tab: 
+And press **s** in the `main.py` to send it to the GS. Now, back in the GS Dashboard, we will see the requested file appear in the **Downlinked Files** Section of the *Files* tab: 
 
 ![alt text](./imgs/download.png)
 
@@ -203,12 +204,14 @@ Which we can directly download and visualize. You should see the following :
 2024-06-28T19:27:41+00:00	DiamondDogs/	{"message":"Hello World"}
 ```
 
+# Debug
+By running the following comand:
 
 ```bash
 $ ./debug.sh
 ```
 
-This will copy from the FS the files in your `app/data/` folder, which is where the Dockerfiles and scripts are transferred to, and also the log files of the Docker Images and Containers the FS tries to build and to execute:
+You can copy from the FS the files in your `app/data/` folder, which is where the Dockerfiles and scripts are transferred to, and also the log files of the Docker Images and Containers the FS tries to build and to execute. This can help in case something goes wrong in the execution:
 
 ```bash
 $ ./deploy.sh
@@ -231,4 +234,4 @@ Fetched the following files from FS:
 
 1 directory, 11 files
 
-```
+``` 

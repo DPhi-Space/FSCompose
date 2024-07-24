@@ -1,16 +1,11 @@
-import sys
 import time
 import struct
 import socket
-# TCP Stuff
-DEBUG = True
-TCP_IP              =       '0.0.0.0'
-TCP_PORT            =       50000
-print('Connecting to ', TCP_IP, TCP_PORT)    
 
-
-READ_TIMEOUT                =   0.001
+UART_READ_TIMEOUT           =   0.001
+TCP_READ_TIMEOUT            =   0.001
 FILE_PKT_CHUNK_SIZE         =   220
+MAX_PKT_SIZE                =   512
 START_WORD                  =   b'\xde\xad\xbe\xef'
 START_WORD_SIZE             =   4         # bytes
 CHECKSUM_SIZE               =   4         # bytes
@@ -19,8 +14,10 @@ PACKET_ID_SIZE              =   1
 HEADER_SIZE                 =   START_WORD_SIZE + PACKET_ID_SIZE + METADATA_SIZE    # bytes
 ACK_PKT_SIZE                =   4
 MAX_UNACKED_PKTS            =   20
-UNACKED_PKTS_TIMEOUT        =   30
-
+UNACKED_PKTS_TIMEOUT        =   1
+UNACKED_PKTS_MAX_RESEND_CNT =   10 
+MESSAGE_CORRUPTION_RATE     =   0.05    # Probability of corrupting a message
+BYTE_CORRUPTION_RATE        =   0.01    # Probability of corrupting a byte within a message
 
 ABSOLUTE_TIME_CMD = 0
 RELATIVE_TIME_CMD = 1
@@ -57,6 +54,8 @@ PKT_TYPE = {
     'FW_PACKET_DP'              : 0x05,
     'FW_PACKET_IDLE'            : 0x06,
     'FW_PACKET_ACK'             : 0xAC,
+    'FW_PACKET_RET_OK'          : 0xAD,
+    'FW_PACKET_RET_ERROR'       : 0xAE,
     'FW_PACKET_UNKNOWN'         : 0xFF,
 }
 
@@ -67,10 +66,15 @@ FILE_PKT_TYPE = {
     'CANCEL_PKT'                : 0x03,
 }
 
+EXPECTING_FILE_PKT = FILE_PKT_TYPE['START_PKT']
+
+INCOMING_FILE_MAX_SEQID = 0
+INCOMING_FILE_PKT_CNT = 0
+INCOMING_FILE_PKT_SEQID_LIST = []
+
+
 OTV_CMD_OPCODES = {
     'SEND_FILE'             :   0x5010,
-    'DELETE_FILE'           :   0x5011,
-    'REFLASH_MCU'           :   0x5012,
 }
 
 """ 
@@ -78,7 +82,6 @@ List to keep track of the packets we sent and have not been ack yet.
 """
 unacked_pkts = []
 packetID = 0
-unacked_pkts_cnt = 0
 
 
 """
@@ -100,103 +103,149 @@ def crc32_noxor(data: bytes, crc_value = 0xFFFFFFFF) -> int:
     return crc_value
 
 def log(*args, sep=' ', end='\n'):
-    global DEBUG
-    if not DEBUG:
-        print(*args, sep=sep, end=end)
+    print(*args, sep=sep, end=end)
     
 
 ########################################
 #           Commands Management
 ########################################
-"""
-Tries to decode a valid packet from the data and appends it to the send_queue if
-it is meant for another node or executes it if meant for the OTV.
-"""
-def decode_data(data):
-    global unacked_pkts, unacked_pkts_cnt, file_name, CURRENT_STATE
-    if data:
-        offset = 0
-        while True:
-            cmd_start_offset = data[offset:].find(START_WORD)
-            cmd_size = int.from_bytes(data[offset+6:offset+8], "big")
-            cmd_end_offset = offset + HEADER_SIZE + cmd_size + CHECKSUM_SIZE
-            pkt = data[offset + cmd_start_offset:cmd_end_offset]
-            if len(pkt) >= 8:
-                
-                source      = pkt[4]
-                dest        = pkt[5]
-                size        = int.from_bytes(pkt[6:8], "big")
-                id          = pkt[8]
-                pkt_type    = int.from_bytes(pkt[9:13], "big")
-                pkt_data    = pkt[13:-4]
-                checksum    = pkt[-4:]
-                cmd =  {'source':source, 'dest':dest, 'size':size, 'packetID':id,
-                        'pkt_type':pkt_type, 'data':pkt_data, 'checksum':checksum, 
-                        'bytestream':pkt}
-                log("     Decoding data, len pkt ", len(pkt), dest)
-                
-                if cmd['dest'] == NODES['MCU'] or cmd['dest'] == NODES['MPU']:                    
-                    log("     Forwarding Command to ", cmd['dest'])
-                    send_pkt(cmd['bytestream'])
-                    
-                elif cmd['dest'] == NODES['OTV'] or cmd['dest'] == NODES['GDS']:
-                    
-                    if cmd['pkt_type'] == PKT_TYPE['FW_PACKET_COMMAND']:
-                        log("     Executing Command")
-                        send_ack(id, source)
-                        execute_cmd(cmd['data'])
-                        
-                    elif cmd['pkt_type'] == PKT_TYPE['FW_PACKET_FILE']:
-                        send_ack(id, source)
-                        seqID = int.from_bytes(cmd['data'][1:5], "big")
-                        
-                        if cmd['data'][0] == FILE_PKT_TYPE['START_PKT']:
-                            # decode filename from packet
-                            file_size = int.from_bytes(cmd['data'][5:9], "big")
-                            src_file_name_size = cmd['data'][9]
-                            src_file_name = cmd['data'][10:10+src_file_name_size]
-                            
-                            dst_file_name_size = cmd['data'][10+src_file_name_size]
-                            dst_file_name = cmd['data'][11+src_file_name_size:11+src_file_name_size+dst_file_name_size]
-                            file_name = str(dst_file_name, 'UTF-8')
-                            
-                            log("     Received File Start Pkt ", seqID, dst_file_name, "size", file_size)
-                            
-                            # TODO check this
-                            # the issue is that when writing the second data packet, the offset wont be 0, but the file
-                            # is only as big as the first data packet
-                            
-                        elif cmd['data'][0] == FILE_PKT_TYPE['DATA_PKT']:
-                            
-                            file_offset = int.from_bytes(cmd['data'][5:9], "big")
-                            file_data_size = int.from_bytes(cmd['data'][9:11], "big")
-                            file_data = cmd['data'][11:12+file_data_size]
-                            log("     Received File Data Pkt seq ", seqID, "offset at ", file_offset, "pkt size", file_data_size)
-                            
-                            # TODO issue if the file already exists, at it will append data to it
-                            with open(file_name, 'ab') as file:
-                                #file.seek(file_offset)
-                                file.write(file_data)
-                            
-                        elif cmd['data'][0] == FILE_PKT_TYPE['END_PKT']:
-                            log("     Received File End Pkt seq ", seqID)
-                            print("Received File ", file_name)
-                            if file_name == 'downlink.zip':
-                                CURRENT_STATE = STATES['IDLE']
-                            # TODO checksum verification
-                                            
-                    elif cmd['pkt_type'] == PKT_TYPE['FW_PACKET_ACK']:
-                        log('     Received ACK for packetID ', cmd['packetID'])
-                        unacked_pkts = [p for p in unacked_pkts if p['packetID'] != cmd['packetID']]
-                        unacked_pkts_cnt -= 1
-                else:
-                    log('    Destination not found \r\n') 
-                    
-                    
-            offset += cmd_end_offset
+
+def decode_data(pkt):
+    global unacked_pkts, file_name, CURRENT_STATE, EXPECTING_FILE_PKT, INCOMING_FILE_MAX_SEQID, INCOMING_FILE_PKT_CNT, INCOMING_FILE_PKT_SEQID_LIST
+
+    source      = pkt[4]
+    dest        = pkt[5]
+    size        = int.from_bytes(pkt[6:8], "big")
+    id          = pkt[8]
+    pkt_type    = int.from_bytes(pkt[9:13], "big")
+    pkt_data    = pkt[13:-4]
+    checksum    = int.from_bytes(pkt[-4:], "big")
+    
+    cmd =  {'source':source, 'dest':dest, 'size':size, 'packetID':id,
+            'pkt_type':pkt_type, 'data':pkt_data, 'checksum':checksum, 
+            'bytestream':pkt}                
+    
+    calculated_checksum = crc32_noxor(pkt[0:-4])^0xFFFFFFFF
+    
+    if calculated_checksum == checksum:
+        
+        if cmd['dest'] == NODES['MCU']:
+            log("     Forwarding Command to ", cmd['dest'])
+            send_pkt(cmd['bytestream'])
             
-            if offset >= len(data):
-                return
+        elif cmd['dest'] == NODES['OTV'] or cmd['dest'] == NODES['GDS'] or cmd['dest'] == NODES['MPU']:
+            
+            if cmd['pkt_type'] == PKT_TYPE['FW_PACKET_COMMAND']:
+                log("     Executing Command")
+                send_ack(id, source)
+                execute_cmd(cmd['data'])
+            
+            elif cmd['pkt_type'] == PKT_TYPE['FW_PACKET_RET_OK']:
+                log("       CMD RET_OK")
+                send_ack(id, source)
+                if CURRENT_STATE == STATES['WAITING_DOWNLINK']:
+                    #CURRENT_STATE = STATES['EXIT']
+                    CURRENT_STATE = STATES['IDLE']
+                
+            elif cmd['pkt_type'] == PKT_TYPE['FW_PACKET_RET_ERROR']:
+                log("       CMD RET_ERROR")
+                send_ack(id, source)
+                if CURRENT_STATE == STATES['WAITING_DOWNLINK']:
+                    CURRENT_STATE = STATES['EXIT']
+                    #CURRENT_STATE = STATES['IDLE']
+
+            elif cmd['pkt_type'] == PKT_TYPE['FW_PACKET_FILE']:
+                
+                seqID = int.from_bytes(cmd['data'][1:5], "big")
+                
+                if cmd['data'][0] == FILE_PKT_TYPE['START_PKT']:
+                    if EXPECTING_FILE_PKT == FILE_PKT_TYPE['START_PKT']:
+                        EXPECTING_FILE_PKT = FILE_PKT_TYPE['DATA_PKT']
+                        # decode filename from packet
+                        print("                 CMD 5:9 ", cmd['data'][5:9])
+                        file_size = int.from_bytes(cmd['data'][5:9], "big")
+                        src_file_name_size = cmd['data'][9]
+                        src_file_name = cmd['data'][10:10+src_file_name_size]
+                        
+                        dst_file_name_size = cmd['data'][10+src_file_name_size]
+                        dst_file_name = cmd['data'][11+src_file_name_size:11+src_file_name_size+dst_file_name_size]
+                        file_name = str(dst_file_name, 'UTF-8')
+                        
+                        INCOMING_FILE_MAX_SEQID = file_size // FILE_PKT_CHUNK_SIZE + 2
+                        INCOMING_FILE_PKT_SEQID_LIST = list(range(1, INCOMING_FILE_MAX_SEQID + 1))
+                        log("     Received File Start Pkt seqID ", seqID, dst_file_name, "size", file_size)
+                        send_ack(id, source)    
+                        
+                        # Need to create an empty file with the size of the expected one, so that
+                        # we can seek and write the data packets to the correct offset if they come out of order
+                        with open(file_name, 'wb') as f:
+                            f.write(b'\0' * file_size)
+                    
+                    else:
+                        log ("      Not expecting FILE START PKT ", seqID)   
+                    
+                    # TODO check this
+                    # the issue is that when writing the second data packet, the offset wont be 0, but the file
+                    # is only as big as the first data packet
+                    
+                elif cmd['data'][0] == FILE_PKT_TYPE['DATA_PKT']:
+                    if EXPECTING_FILE_PKT == FILE_PKT_TYPE['DATA_PKT']:
+                    
+                        file_offset = int.from_bytes(cmd['data'][5:9], "big")
+                        file_data_size = int.from_bytes(cmd['data'][9:11], "big")
+                        file_data = cmd['data'][11:12+file_data_size]
+                        
+                        with open(file_name, 'r+b') as file:
+                            file.seek(file_offset)
+                            file.write(file_data)
+                        
+                        log("     Received File Data Pkt seqID ", seqID, "offset at ", file_offset, "pkt size", file_data_size)
+                        send_ack(id, source)
+                        
+                        # check if the next seqID is supposed to be the endpacket
+                        # TODO actually we need to count the amount of seqID we receive, because
+                        # we can get packets out of order (i.e. the last data packet can arrive before the 
+                        # other ones before it)
+                        try:
+                            if seqID in INCOMING_FILE_PKT_SEQID_LIST:
+                                INCOMING_FILE_PKT_SEQID_LIST.remove(seqID)
+                                INCOMING_FILE_PKT_CNT += 1
+                        except ValueError:
+                            print(f"Data Pkt seqID {seqID} not found in INCOMING_FILE_PKT_SEQID_LIST")
+
+                        # check if the SEQID list tracker is empty, meaninig we received all the expected seqIDs
+                        if len(INCOMING_FILE_PKT_SEQID_LIST) == 1 and INCOMING_FILE_PKT_SEQID_LIST[0] == INCOMING_FILE_MAX_SEQID:
+                            print(f"        All expected Data Pkts received. Waiting for End Pkt...")
+                            EXPECTING_FILE_PKT = FILE_PKT_TYPE['END_PKT']
+                
+                    else:
+                        log ("          Not expecting FILE DATA PKT", seqID)   
+                    
+                elif cmd['data'][0] == FILE_PKT_TYPE['END_PKT']:
+                    
+                    if EXPECTING_FILE_PKT == FILE_PKT_TYPE['END_PKT']:
+                        if seqID == INCOMING_FILE_MAX_SEQID and seqID == INCOMING_FILE_PKT_SEQID_LIST[0]:
+                            print("Received File ", file_name)
+                            INCOMING_FILE_PKT_CNT = 0
+                            INCOMING_FILE_MAX_SEQID = 0
+                            EXPECTING_FILE_PKT = FILE_PKT_TYPE['START_PKT']
+                            INCOMING_FILE_PKT_SEQID_LIST = []
+                            log("     Received File End Pkt seqID ", seqID)
+                            send_ack(id, source)
+                        else:
+                            print(f"    Received File End Pkt with incorrect seqID ", seqID)
+                    else:
+                        log ("          Not expecting FILE END PKT", seqID)   
+                                    
+            elif cmd['pkt_type'] == PKT_TYPE['FW_PACKET_ACK']:
+                log('     Received ACK for packetID ', cmd['packetID'])
+                unacked_pkts = [p for p in unacked_pkts if p['packetID'] != cmd['packetID']]
+
+        else:
+            log('    Destination not found ', cmd['dest']) 
+            
+    else:
+        log('       CHECKSUM Failed')
             
 """
     Execute cmd from an already decoded CmdPacket
@@ -206,17 +255,9 @@ def execute_cmd(cmd):
     opcode = int.from_bytes(cmd['data'][0:4], "big")
     
     if opcode == OTV_CMD_OPCODES['SEND_FILE']:
-        log('     Executing SEND_FILE')
         filename_size = int.from_bytes(cmd['data'][4:6], "big")
         filename = str(cmd['data'][6:6+filename_size], 'UTF-8')
-        node_val = cmd['data'][9+filename_size]    # check why it is 4 bytes in the cmd seq
-        return send_file(filename, node_val)
-        
-    elif opcode == OTV_CMD_OPCODES['REFLASH_MCU']:
-        log('     Executing REFLASH_MCU')        
-    
-    elif opcode == OTV_CMD_OPCODES['DELETE_FILE']:
-        log('     Executing DELETE_FILE')
+        return send_file(filename)
         
     elif opcode == 0x00000500:
         log('     Executing NO-OP')
@@ -231,12 +272,8 @@ def execute_cmd(cmd):
         data += struct.pack(">I", crc32_noxor(data)^0xFFFFFFFF)
         send_pkt(data)
         
-    # TODO sCommand specific
     return True
         
-    # TODO
-    #    log('     [ERROR] Opcode not found')
-
 
 
 ##################################################################
@@ -309,14 +346,12 @@ def get_file_size_and_hash(f, file_path):
     except IOError:
         log("Could not read file: ", file_path)
         return -1
-    log("Calculated hash ", hash)
     return size, hash
 
 
     
-def send_file(filename, node):
-    global file_seq_id, file_max_id, file_hash, file_offset
-    log("     Sending file ", filename, file_max_id, file_seq_id)
+def send_file(filename):
+    global file_seq_id, file_max_id, file_hash, file_offset, unacked_pkts
     
     if len(unacked_pkts) < MAX_UNACKED_PKTS:
         if file_seq_id == 0:
@@ -326,13 +361,13 @@ def send_file(filename, node):
                 file_size, file_hash = get_file_size_and_hash(f, filename)
                 
                 # first we send the start    packet
-                log('         Sending START PKT', file_seq_id)
+                log('         Sending START PKT', filename, file_seq_id, "max SeqID ", file_max_id)
                 start_data = struct.pack(">IBIIB", PKT_TYPE['FW_PACKET_FILE'], FILE_PKT_TYPE['START_PKT'], file_seq_id, file_size, len(filename))
                 start_data += bytes(filename, 'ascii')
                 start_data += struct.pack(">B", len(filename))
                 start_data += bytes(filename, 'ascii')
                 
-                start_pkt = START_WORD + struct.pack(">BBHB", NODES['OTV'], node, len(start_data), get_packetID_and_increment()) +  start_data 
+                start_pkt = START_WORD + struct.pack(">BBHB", NODES['OTV'], NODES['MPU'], len(start_data), get_packetID_and_increment()) +  start_data 
                 start_pkt += struct.pack(">I", crc32_noxor(start_pkt) ^0xFFFFFFFF)
                 
                 send_pkt(start_pkt)
@@ -351,7 +386,7 @@ def send_file(filename, node):
                     
                     file_offset += len(data)
                     
-                    data_pkt = START_WORD + struct.pack(">BBHB", NODES['OTV'], node, len(data_data), get_packetID_and_increment()) + data_data
+                    data_pkt = START_WORD + struct.pack(">BBHB", NODES['OTV'], NODES['MPU'], len(data_data), get_packetID_and_increment()) + data_data
                     data_pkt += struct.pack(">I", crc32_noxor(data_pkt)^0xFFFFFFFF)
                     send_pkt(data_pkt)
                     file_seq_id += 1
@@ -360,13 +395,13 @@ def send_file(filename, node):
                     log("         ERROR Reading File")
                     
         
-        elif file_seq_id == file_max_id:
+        elif file_seq_id == file_max_id and len(unacked_pkts) == 0 and len(send_queue) == 0:
             
             log('         Sending END PKT ', file_seq_id, "hash", file_hash, type(file_hash))
             end_data = struct.pack(">IBII", PKT_TYPE['FW_PACKET_FILE'],  FILE_PKT_TYPE['END_PKT'], file_seq_id, file_hash)
-            end_pkt = START_WORD + struct.pack(">BBHB", NODES['OTV'], node, len(end_data), get_packetID_and_increment()) + end_data
+            end_pkt = START_WORD + struct.pack(">BBHB", NODES['OTV'], NODES['MPU'], len(end_data), get_packetID_and_increment()) + end_data
             end_pkt +=  struct.pack(">I", crc32_noxor(end_pkt)^0xFFFFFFFF)           
-            send_pkt(end_pkt)
+            send_pkt(end_pkt, True)
             # reset params
             file_offset = 0
             file_hash  = 0
@@ -374,13 +409,7 @@ def send_file(filename, node):
             file_seq_id = 0
             
             return True
-        else:
-            #TODO probably an error, check
-            log("         Depassed max file pkt id ", file_seq_id)
-            pass
-    else:
-        log("         WARNING Maxed unacked packets")
-    
+        
     # The only case that returns true, i.e. finished sending file, is when we send the end_pkt
     return False
         
@@ -394,14 +423,20 @@ def send_file(filename, node):
 """
 Adds pkt to send_queue and also to the unaked_pkts
 """
-def send_pkt(pkt):
-    global send_queue
+def send_pkt(pkt, end_pkt=False):
+    global send_queue, file_max_id, file_seq_id
     unacked_pkts.append({
                     'packetID'  : pkt[8],
                     'time_sent' : time.time(),
                     'data'      : pkt,
+                    'end_pkt'   : end_pkt,
+                    'resend_cnt': 0
                 })
-    send_queue.append(pkt)
+    
+    # Rational: we dont' want to send the end_pkt before all the file data pkts were sent
+    if (end_pkt == False) or (end_pkt == True and file_seq_id == file_max_id) :
+        send_queue.append(pkt)
+    
 
 def send_ack(id, source):
     global send_queue
@@ -413,45 +448,128 @@ def send_ack(id, source):
     data += struct.pack(">I", crc32_noxor(data)^0xFFFFFFFF)
     send_queue.append(data)
     
-    log("Sending ACK ", id, data)    
+    log("Sending ACK ", id)    
 
 def resend_unacked():
-    global unacked_pkts,send_queue, UNACKED_PKTS_TIMEOUT
+    global unacked_pkts, send_queue, UNACKED_PKTS_TIMEOUT, file_seq_id, file_max_id, UNACKED_PKTS_MAX_RESEND_CNT
     
-    for i in range(len(unacked_pkts)):
-        if time.time() >= unacked_pkts[i]['time_sent'] + UNACKED_PKTS_TIMEOUT:
-            log('Resending PKT ', unacked_pkts[i]['packetID'])
-            send_queue.append(unacked_pkts[i]['data'])
-            unacked_pkts[i]['time_sent'] = time.time()
+    current_time = time.time()
+    i = 0
+    while i < len(unacked_pkts):
+        pkt = unacked_pkts[i]
+        if current_time >= pkt['time_sent'] + UNACKED_PKTS_TIMEOUT:
+            if (not pkt['end_pkt']) or (pkt['end_pkt'] and file_seq_id == file_max_id):
+                if pkt['resend_cnt'] >= UNACKED_PKTS_MAX_RESEND_CNT:
+                    log('Dropping UNACKED PKT', pkt['packetID'])
+                    del unacked_pkts[i]
+                    continue  # Skip incrementing i to avoid skipping the next element
+                else:
+                    log('Resending UNACKED PKT', pkt['packetID'])
+                    send_queue.append(pkt['data'])
+                    pkt['time_sent'] = current_time
+                    pkt['resend_cnt'] += 1        
+        i += 1  # Increment i only if no element was removed
+
 
 def get_packetID_and_increment():
-    global packetID
-    retval = packetID
-    if packetID >= 0xFE:
-        packetID = 0
-    else :
-        packetID += 1
-    return retval
+    global packetID, unacked_pkts
+    packetID += 1
+    if not unacked_pkts:
+        return packetID
 
-
+    while True:
+        for unacked_pkt in unacked_pkts:
+            if unacked_pkt['packetID'] == packetID:
+                packetID += 1
+        if packetID >= 0xFE:
+            packetID = 0
+        else:
+            return packetID
 
 #######################################
 #       ReadWrite Interface
 #######################################
 
 def send(data):
-    global payload, conn
+    global conn, driver
     conn.sendall(data)
-    
-    
-def read():
-    global payload, conn
-    try:
-        conn.settimeout(READ_TIMEOUT)
-        return conn.recv(48)
-    except socket.timeout:
-        return b'' 
 
+def read():
+    global conn
+    try:
+        conn.settimeout(TCP_READ_TIMEOUT)
+        data = conn.recv(48)
+        return data
+    except socket.timeout:
+        return b''
+        
+
+
+def process_buffer(buffer):
+    global MAX_PKT_SIZE
+    processed_bytes = 0
+    print(f"buffer data : {''.join(f'{x:02x}' for x in buffer)}")
+    
+    while processed_bytes < len(buffer):
+        # Look for START_WORD
+        start_index = buffer.find(START_WORD, processed_bytes)
+        if start_index == -1:
+            # No complete START_WORD found, but there might be a partial one at the end
+            for i in range(1, len(START_WORD)):
+                if buffer.endswith(START_WORD[:i]):
+                    print("     Incomplete start word")
+                    return buffer[-(i):]
+            # No START_WORD found, discard processed bytes and exit
+            return bytearray()
+        
+        # Check if we have enough bytes for a complete header
+        if len(buffer) - start_index < HEADER_SIZE:
+            # Incomplete header, keep the remaining buffer and exit
+            print("     Incomplete header")
+            return buffer[start_index:]
+        
+        # Extract header information
+        source = buffer[start_index + 4]
+        dest = buffer[start_index + 5]
+        size = int.from_bytes(buffer[start_index + 6:start_index + 8], "big")
+        packet_id = buffer[start_index + 8]
+        
+        full_packet_size = HEADER_SIZE + size + CHECKSUM_SIZE
+        
+        # Check if the packet size is too big
+        if full_packet_size >= MAX_PKT_SIZE:
+            print("     Packet Size too big, probably data size got corrupted")
+            processed_bytes = start_index + len(START_WORD)  # Move past this START_WORD
+            continue
+        elif len(buffer) - start_index < full_packet_size:
+            # Incomplete packet, keep the remaining buffer and exit
+            print(f"     Incomplete packet, missing {full_packet_size - (len(buffer) - start_index)} bytes")
+            return buffer[start_index:]
+        
+        # Extract packet and checksum
+        packet = buffer[start_index:start_index + full_packet_size]
+        print(f"    packet data : {''.join(f'{x:02x}' for x in packet)}")
+        checksum_received = int.from_bytes(packet[-CHECKSUM_SIZE:], "big")
+        data_to_check = packet[:-CHECKSUM_SIZE]
+        
+        # Calculate expected checksum
+        calculated_checksum = crc32_noxor(data_to_check) ^ 0xFFFFFFFF
+        
+        if checksum_received != calculated_checksum:
+            print(f"Checksum verification failed at index {start_index}, skipping this packet")
+            processed_bytes = start_index + len(START_WORD)  # Move past this START_WORD
+            continue
+        
+        # Process valid packet
+        try:
+            decode_data(packet)
+        except Exception as e:
+            print(f"Error processing packet at index {start_index}: {e}")
+        
+        processed_bytes = start_index + full_packet_size
+    
+    # All data processed
+    return bytearray()
 
 
 #######################################
@@ -467,6 +585,9 @@ file_offset = 0
 payload = None
 conn, addr = (None, None)
 
+        
+
+
 
 def set_current_state(state):
     global CURRENT_STATE
@@ -480,7 +601,9 @@ def get_current_state():
 def fs_interface(cmd_file):
     global send_queue, conn, CURRENT_STATE
     
-    # tcp client 
+    TCP_IP = '0.0.0.0'
+    TCP_PORT = 50054
+    
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         conn.connect((TCP_IP, TCP_PORT))
@@ -492,8 +615,7 @@ def fs_interface(cmd_file):
         print(f"Error: {e}")
         print("Failed to connect to FS. Have you ran ./run.sh ? ")
         return
-        
-    log("Connected to server at", TCP_IP, TCP_PORT)
+
     
     with open(cmd_file, 'rb') as f:
         cmd_seq_data = f.read()
@@ -511,35 +633,28 @@ def fs_interface(cmd_file):
 
     cmd_ok = True
     current_time = time.time()
+    start_time = time.time()
+
+    
     try:
         while CURRENT_STATE != STATES['EXIT']:
             data = read()
             if data:
                 buffer.extend(data)
-
-                while len(buffer) >= HEADER_SIZE:
-                    cmd_size = int.from_bytes(buffer[6:8], "big")
-                    full_packet_size = HEADER_SIZE + cmd_size + CHECKSUM_SIZE
-
-                    if len(buffer) < full_packet_size:
-                        break  # Wait for more data
-
-                    packet = buffer[:full_packet_size]
-
-                    decode_data(bytes(packet))
-                    buffer = buffer[full_packet_size:]
-            else:
-                resend_unacked()
+                buffer = process_buffer(buffer)
                 
             if len(send_queue) > 0:
                 for p in send_queue:
                     send(p)
                 send_queue = []
-            
+            else:
+                resend_unacked()
+
             if CURRENT_STATE == STATES['IDLE']:
                 pass
                 
             elif CURRENT_STATE == STATES['EXECUTING_CMDS']:
+                
                 if cmd_ok:
                     current_time = time.time()
                     cmd_ok = False
@@ -553,26 +668,30 @@ def fs_interface(cmd_file):
                     exec_time_relative = current_time + record_exec_time_seconds
                     
                     if (descriptor == 0 and time.time() > record_exec_time_seconds) or (descriptor == 1 and time.time() > exec_time_relative):
-                        log("Executing Record index:", record_index)
                         record_size = int.from_bytes(cmd_seq_data[offset+9:offset+13], "big")
                         buffer_cmd = cmd_seq_data[offset+17:offset+13+record_size]
 
+                        # do not go to the next cmd unless there are no more unacked pkts
+                        # so as to not overload the system if it is still processing stuff before
+                        #if len(unacked_pkts) == 0:
+                        
                         cmd = {'data': buffer_cmd}
                         cmd_ok = execute_cmd(cmd)
 
                         if cmd_ok:
                             offset += record_size + 13
-                            record_index += 1
+                            record_index += 1                
                 
                 else:
                     CURRENT_STATE = STATES['WAITING_DOWNLINK']
                     record_index = 0
                     offset = 11 
-                        
+                    
             elif CURRENT_STATE == STATES['EXIT']:
                 log('Exiting FS Interface...')
                 break
-    
+            
+            #resend_unacked()
     except KeyboardInterrupt:
         if conn:
             conn.close()
@@ -581,4 +700,5 @@ def fs_interface(cmd_file):
             
 if __name__ == "__main__":
     fs_interface('cmds-clients.bin')
+    
     

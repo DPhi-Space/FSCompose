@@ -14,7 +14,7 @@ The *Home* tab provides a quick overview of the following points:
 
 ![alt text](./imgs/home.png)
 
-TODO This values will be resetted before the operations start, mention caveat with testing (values go up when using FSCompose, this will be fixed)
+This values will be resetted before the operations start.
 
 ### Commander
 The *Commander* tab is where users will request for commands to be executed on the DPhi Space FS. The commands that are supported are explained in [Commands](./Commands.md). 
@@ -29,10 +29,11 @@ The *Command Files* lists all the created command files. The user can update, de
 
 
 
-
 ### Automaton
 
 TODO
+
+![alt text](./imgs/automaton.png)
 
 ### Files
 The *Files* tab allows a user to upload files to the GS, which will be sent to the FS if request, and gives an overview of the following files : 

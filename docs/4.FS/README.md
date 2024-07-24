@@ -1,45 +1,35 @@
 
 # Flight Software
 
-## Setup
-
-To start the local deployment of DPhi Space Flight Software (FS), first login to our private Docker Registry. Use the same acount one would use to login nto the DPhi Space Dashboard
-
-```bash
-$ docker login ops.dphi.space
-Username: [Username]
-Password: [Password]
-```
-Now you are ready to run the deployment script : 
-
-```bash
-$ ./run.sh
-```
-
 ## Flight Software Interface
 
-To interface between the FS and GS, we provide the `main.py` python script, which will fetch the files from the GS and send them to the FS, start the command sequence execution on the FS side and wait for the files the FS will send back. Once it receives them, it will be ready to upload these files to the GS, where the user can view and download them. 
-
-Start by running the script and enter the same login information as for the GS: 
+To interface between the FS and GS, the `main.py` script will start a Flight Software Interface thread, which will wait for instruction after setting up the FSCompose and fetching the necessary files from the GS Dashboard, $i.e.$, `payloads_files.zip`: 
 
 ``` bash
-$ python3 main.py
-Connecting to 0.0.0.0 50000
 Starting FS Interface
-Username:[Username]
-Password:[Password]
+Username: [Username]
+Password: [Password]
 Login successful
+Zip retrieved successfully
+Starting fs...
+
+(...)
+
+Setup ready!
 Starting fs-interface...
 
 Press e to execute Command Sequence
 Press s to send downlink.zip to GS
 Press q to quit
 
-Waiting for Instructions 
+Waiting for Instructions Cmd seq len  136
 ```
 
-To execute the Active Command Sequence, which is set in the *Commander* tab of the GS, press e.
-Once the script receives the files back from the FS, the script will be ready to re-execute an action. Press s to send the received files to the GS so that they can be distributed and processed. The user can also directly analyse them by extracting the *downlink.zip* files.
+- To execute the Active Command Sequence, which is set in the *Commander* tab of the GS, press **e**.
+- To uplink the `downlink.zip` file received from the FSCompose after it finished executing a Command Sequence, press **s**
+- To quit the FSCompose suite, press **q**. It is important to quit in this fashion, as otherwise the Containers might not stop correctly and jam the TCP ports on the next run of the whole software suite.
+
+Once the script receives the files back from the FS, the script will be ready to re-execute an action. Press **s** to send the received files to the GS so that they can be distributed and processed. The user can also directly analyse them by extracting the `downlink.zip` files.
 
 
 ## Data Folder

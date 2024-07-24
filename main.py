@@ -1,6 +1,10 @@
 import requests
 import threading
 import json
+import time
+import subprocess
+from jinja2 import Environment, FileSystemLoader
+import json
 import os
 import subprocess
 from otv import *
@@ -10,7 +14,6 @@ from getpass import getpass
 CMD_FILE = 'cmds-clients.bin'
 
 def login(username, pwd):
-    #url = "http://127.0.0.1:8000/api/login"
     url = "http://ops.dphi.space:8000/api/login"
     
     data = {"username": username, "password": pwd}
@@ -23,7 +26,6 @@ def login(username, pwd):
         print("Login failed")
 
 def get_zip(token):
-    #url = "http://127.0.0.1:8000/api/upload_zip/"
     url = "http://ops.dphi.space:8000/api/upload_zip/"
     token_str = f"Token {token}"
     headers = {"Authorization": token_str}
@@ -39,7 +41,6 @@ def get_zip(token):
         return False
         
 def send_zip(token):
-    #url = "http://127.0.0.1:8000/api/upload_zip/"
     url = "http://ops.dphi.space:8000/api/upload_zip/"
     file_path = './downlink.zip'
     if os.path.exists(file_path):
@@ -59,6 +60,25 @@ def send_zip(token):
     else:
         print("The downlink.zip file does not exist")
 
+def setup_fs():
+    with open('./deploy/providers.json') as f:
+        provider_json = json.load(f)
+
+    env = Environment(loader=FileSystemLoader("deploy/"))
+    template = env.get_template('docker-compose-template.txt')
+
+    content = template.render(provider_json['providers'][0])
+    with open('docker-compose.yml', mode='w', encoding='utf-8') as f:
+        f.write(content)
+
+    subprocess.run(['docker', 'compose', 'pull'])
+    subprocess.run(['docker', 'compose', 'up', '-d'])
+    subprocess.run(['docker', 'cp', './deploy/providers.json', 'fsw:/app/providers.json'])
+    subprocess.run(['docker', 'cp', './deploy/pdb_fun.stub.py', f"fsw:/app/payloads/{provider_json['providers'][0]['name']}"])
+
+    print("Setup ready!")
+
+
 if __name__ == "__main__":
     print("Starting FS Interface")
     username = input("Username: ")
@@ -66,11 +86,13 @@ if __name__ == "__main__":
     token = login(username, pwd)    
     
     if token:
-        #get_zip(token['token'])
+        get_zip(token['token'])
+        print('Starting fs...')
+        setup_fs()
+        time.sleep(5)
         print('Starting fs-interface...')
         th_interface = threading.Thread(target=fs_interface, args=(CMD_FILE,))
         th_interface.start()
-        time.sleep(2)
         
         if th_interface.is_alive():
             print('\nPress e to execute Command Sequence')
@@ -103,6 +125,9 @@ if __name__ == "__main__":
                 time.sleep(3)
             
             time.sleep(0.1)  # Small sleep to reduce CPU usage
+        
+        # stop docker compose 
+        subprocess.run(['docker', 'compose', 'down'])
                 
         
             

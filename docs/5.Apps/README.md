@@ -1,4 +1,4 @@
-# Power Control API Documentation
+# Power Control API 
 ## Overview
 
 The pdb_fun.py stub provides an interface for controlling power to specific ports. This stub is designed to be used for standalone development of containers. When developping and testing with DPhi Space FSCompose, do not include this stub as the PDB API is already provided. This stub version returns the same responses as the real PDB API in case of no error. 

@@ -7,12 +7,13 @@ Welcome to the FSCompose User Guide for the DPhi Space Flight Software!
 2.  [Setup](./2.Setup/README.md)
 3.  [Dashboard](./3.GroundSegment/README.md)
 4.  [Flight Software](./4.FS/README.md)
-5.  [Apps](./5.Apps/README.md)
+5.  [Power Control API](./5.Apps/README.md)  
 
 
 ## Examples
-[Hello World](./6.Examples/Hello-World/README.md)
-[Serial Payload](./6.Examples/Serial-Payload/README.md)
+1.  [Hello World](./6.Examples/Hello-World/README.md)
+
+2.  [Serial Payload](./6.Examples/Serial/README.md)
 
 ## Reporting Issues and Bugs 🐛
 Please report any issue, bug, warning or suggestions in the following link : 

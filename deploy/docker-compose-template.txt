@@ -1,0 +1,65 @@
+name: clustergate
+services:
+  fsw:
+    image: ops.dphi.space/fsw
+    container_name: fsw
+    environment:
+      - FSW_DEVICE={{ devices }}
+      - GDS_IP=0.0.0.0
+    networks:
+      - network
+    privileged: true
+    ports:
+      - 0.0.0.0:50054:50000
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: 0.0.0.0:24224
+        tag: "fsw"
+    depends_on:
+      - logger
+    volumes:
+      - {{ name }}:/app/payloads/{{ name }}
+      - /var/run/docker.sock:/var/run/docker.sock
+      - logs:/app/logs
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+ 
+  logger:
+    image: ops.dphi.space/custom-fluentd:latest
+    container_name: logger
+    networks:
+      - network
+    ports:
+      - 0.0.0.0:24224:24224
+    volumes:
+      - logs:/fluentd/log
+    deploy:
+      restart_policy:
+        condition: on-failure
+  
+  
+  registry:
+    image: registry:2
+    container_name: registry
+    ports:
+      - 5000:5000
+    networks:
+      - network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+#####################
+#       Apps
+#####################
+  
+
+networks:
+  network:
+
+volumes:
+  logs:
+  {{ name }}:

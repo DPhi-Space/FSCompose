@@ -1,0 +1,16 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+RUN pip install smbus2
+
+RUN pip install requests
+
+
+COPY ./user.json /app/
+
+COPY ./mkr-i2c.py /app/
+
+COPY ./pdb_fun.py /app/
+
+CMD ["python3","-u", "mkr-i2c.py"]

@@ -1,4 +1,4 @@
-# Example: Power Contraol
+# Example: Power Control
 
 In this example we will be going through the development and deployment of a Docker Container that posts power requests to the Flight Software, so that a specific port in the payload's dedicated power channel can be turned on and off. 
 

@@ -74,7 +74,7 @@ def setup_fs():
     subprocess.run(['docker', 'compose', 'pull'])
     subprocess.run(['docker', 'compose', 'up', '-d'])
     subprocess.run(['docker', 'cp', './deploy/providers.json', 'fsw:/app/providers.json'])
-    subprocess.run(['docker', 'cp', './deploy/pdb_fun.stub.py', f"fsw:/app/payloads/{provider_json['providers'][0]['name']}"])
+    subprocess.run(['docker', 'cp', './deploy/pdb_fun.stub.py', f"fsw:/app/payloads/{provider_json['providers'][0]['name']}/pdb_fun.py"])
 
     print("Setup ready!")
 

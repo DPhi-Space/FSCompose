@@ -1,11 +1,13 @@
 FROM python:3.9-slim
-# registry:5000/python:3.7-slim-buster
 
 WORKDIR /app
 
-COPY . /app/
-
 RUN pip install requests
+
+COPY ./pdb_fun.py /app/
+COPY ./user.json /app/
+COPY ./payload.py /app/
+
 
 EXPOSE 80
 

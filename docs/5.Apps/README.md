@@ -1,9 +1,9 @@
 # Power Control API 
 ## Overview
 
-The pdb_fun.py stub provides an interface for controlling power to specific ports. This stub is designed to be used for standalone development of containers. When developping and testing with DPhi Space FSCompose, do not include this stub as the PDB API is already provided. This stub version returns the same responses as the real PDB API in case of no error. 
+The pdb_fun.py stub provides an interface for controlling power to specific ports on the payload's dedicated power channel. This stub is designed to be used for standalone development of containers. When developping and testing with DPhi Space FSCompose, do not include this stub as the PDB API is already provided. This stub version returns the same responses as the real PDB API during nominal operations. 
 
-This API is meant to be used by Docker Containers thath will be running running Python to communicate with their Payloads. 
+This API is meant to be used by Docker Containers that will be running running Python to communicate with their Payloads. 
 
 
 

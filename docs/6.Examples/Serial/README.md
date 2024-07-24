@@ -7,7 +7,11 @@ If you have not already cloned the repo, do so by running the following:
 ```bash
 $ git clone git@github.com:DPhi-Space/FSCompose.git
 $ cd FSCompose/
+$ python3 -m venv venv 
+$ . venv/bin/activate
+$ pip install -r requirements.txt
 ```
+
 ## Payload Overview
 
 The Arduino will act as a simple payload which will respond to certain commands. Below is the command that will be running in it : 
@@ -249,7 +253,7 @@ It is as simple as it gets. We just copy the script inside the Docker Image and 
 
 >❓ The `-u` flag when executing the script simply -u forces the stdout and stderr streams to be unbuffered. Meaning, it will immediately print the prints within the Docker Container to the console running it. 
 
-Lets start by building the Docker Image. In a folder with both the Dockerfile and the previous Python script (*e.g.* `payload-example/serial-payload/`) run the following in the terminal:
+Lets start by building the Docker Image. In a folder with both the Dockerfile and the previous Python script (*e.g.* `payload-example/serial/`) run the following in the terminal:
 
 ```bash
 $ docker build -f Dockerfile.serial -t test-serial .
@@ -292,6 +296,41 @@ As before, we get should get the same output. Now we are ready for the last step
 
 ## Third Step: FSCompose
 
+
+
+### Preparing files in the  GS
+The FSCompose is analogous to the FS that will be running in Clustergate, and Payload Providers interface with it through the GS Dashboard. For local development we will follow the same pipeline. Head to the [GS Dashboard](http://ops.dphi.space:8000/login/) and login with your credentials. 
+
+Then head to the **Files** tab, were we will be uploading the necessary files to run our Docker Container, *i.e.* the `Dockerfile.serial` and the `serial-test.py`. Do so and set them to be uplinked by clicking on the **Uplink** button. This should be the result : 
+
+![](./imgs/file-upload.gif)
+
+Now we need to create a *Command Sequence* to tell the when to build and start the Docker Container inside the FS. Head to the **Commander** tab and create a new *Command Sequence*. 
+
+As this is the first time we will be running this Docker Image, we need to build it at least once. Below is a *Command Sequence* that builds it and starts it after it is built: 
+
+
+```
+R00:00:00 build_start Dockerfile.serial serial-test serial-container
+R00:00:30 stop serial-container
+downlink log.txt
+```
+
+![alt text](./imgs/cmder.png)
+
+Here we are telling the FS to do the following : 
+1. Build the `Docekerfile.serial` and tag the resulting Docker Image to `serial-test`, immediately.
+2. Start a Docker Container called `serial-container` from the `serial-test` Docker Image after the build is finished.
+3. Stop the Docker Container called `serial-container` 30 seconds later.
+3. Downlink the generated `log.txt`
+
+Go ahead and compile it, head to the *Command Files* and set the *Command Sequence* to *Active* as shown below: 
+
+![alt text](./imgs/cmd-files.png)
+
+Now we are ready to run the FSCompose.
+
+
 ### Running local deployment of FS
 To kick off this part, we need to ensure that we can pull the necessary Docker Images that will run the local deployment of the FSCompose. Start by login in to the DPhi Space Docker Registry with the credentials that have been provided:
 
@@ -300,9 +339,10 @@ $ docker login ops.dphi.space
 Username: [username]
 Password: [password]
 ```
-Before running the local FS, we need to adapt the `providers.json` file, which tells this deployment which device it should attach to which provider (*i.e.* the user running the deployment). Open it up and set the following parameters: 
 
-- **name** set this to the same Username you used to login into the [GS Dashboard](http://ops.dphi.space:8000/login/).
+Before running the local FS, we need to adapt the `providers.json` file, which tells this deployment which device it should attach to which provider (*i.e.*, the user running the deployment). Open it up and set the following parameters: 
+
+- **name** set this to the same *Username* you used to login into the [GS Dashboard](http://ops.dphi.space:8000/login/).
 - **devices** set this to the serial port to which the Arduino is connected. 
 - **payloads** set this to *arduino* (or whatever name pleases you).
 
@@ -312,65 +352,15 @@ Before running the local FS, we need to adapt the `providers.json` file, which t
         {
             "name": "[**Username**]",
             "devices": ["/dev/ttyACM0"],
-            "payloads": ["arduino"]
+            "payloads": ["ArduinoMega"]
         }
     ]
 }
 ```
 
-Run the `run.sh` script, which will setup the local deployment of the FS:
-
-```bash
-$ ./run.sh
-```
-
-You should see the following output at the end, when all the components of the FS have been started: 
-
-```bash
-# (...)
-######################################
-
-Setup done! Ready to fly.
-Press 'q' to quit: 
-```
 
 
-### Preparing files in the  GS
-The FS we started in the previous step is analogous to the FS that will be running in Clustergate, and Payload Providers interface with it through the GS Dashboard. For local development we will follow the same pipeline. Head to the [GS Dashboard](http://ops.dphi.space:8000/login/) and login with your credentials. 
-
-Then head to the **Files** tab, were we will be uploading the necessary files to run our Docker Container, *i.e.* the `Dockerfile.serial` and the `serial-test.py`. Do so and set them to be uplinked by clicking on the **Uplink** button. This should be the result : 
-
-![](./imgs/file-upload.gif)
-
-Now we need to create a *Command Sequence* to tell the when to build and when to start the Docker Container inside the FS. Head to the **Commander** tab and create a new *Command Sequence*. 
-
-As this is the first time we will be running this Docker Image, we need to build it at least once. Below is a *Command Sequence* that builds it and 10 seconds later, it starts it : 
-
-
-```
-R00:00:00 build Dockerfile.serial serial-test
-R00:00:30 start serial-container serial-test
-R00:00:30 stop serial-container
-downlink log.txt
-```
-
-![alt text](./imgs/cmder.png)
-
-Here we are telling the FS to do the following : 
-1. Build the `Docekerfile.serial` and tag the resulting Docker Image to `serial-test`, immediately.
-2. Start a Docker Container called `serial-container` from the `serial-test` Docker Image 30 seconds later.
-3. Stop the Docker Container called `serial-container` 30 seconds later.
-3. Downlink the generated `log.txt`
-
-Go ahead and compile it, head to the *Command Files* and set the *Command Sequence* to *Active* as shown below: 
-
-![alt text](./imgs/cmd-files.png)
-
-Now we are ready to run the FS Interface to link the FS and the GS.
-
-### Running FS Interface 
-
-Now we have everything ready. Run the FS Interface software by running the script and logging in with the same credentials used for the GS Dashboard. You should see the following output: 
+Now we have everything ready. Run the FSCompose by running the `main.py` script and logging in with the same credentials used for the GS Dashboard. You should see the following output: 
 
 ```bash
 $ python3 main.py
@@ -381,6 +371,8 @@ Password: [password]
 Login successful
 Starting fs-interface...
 
+(...)
+
 Press e to execute Command Sequence
 Press s to send downlink.zip to GS
 Press q to quit
@@ -388,7 +380,7 @@ Press q to quit
 Waiting for Instructions
 ```
 
-Press *e* and enter for it to fetch everything it needs from the GS and *uplink* it to the (local) FS. Now after a minute or two, the script will receive the `downlink.zip`, and show the output below: 
+Press **e** for it to fetch everything it needs from the GS and *uplink* it to the (local) FSCompose. Now after a minute or two, the script will receive the `downlink.zip`, and show the output below: 
 
 
 ```bash
@@ -400,7 +392,7 @@ Waiting for Instructions
 
 The `downlink.zip` contains file and folder insights (*i.e.* which files are present in the `app/data/` volume of the user and which logs are available for *downlink*). Plus, we will se the `log.txt` file we requested for downlink at the end of the *Command Sequence*.
 
-Press *s* to send the `downlink.zip` to the GS automatically. You can also inspect it locally if you prefer. In the **Files** tab, you should now see the following: 
+Press **s** to send the `downlink.zip` to the GS automatically. You can also inspect it locally if you prefer. In the **Files** tab, you should now see the following listed files: 
 
 ![alt text](./imgs/log-download.png)
 

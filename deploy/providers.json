@@ -1,12 +1,10 @@
 {
     "providers": [
         {
-            "devices": [
-                "/dev/ttyACM0"
-            ],
+            "devices": [],
             "name": "jsilveira",
             "payloads": [
-                "ArduinoMega"
+                "jsilveira"
             ]
         }
     ]

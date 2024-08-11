@@ -31,7 +31,7 @@ STATES = {
     'EXIT'                  :   0xFF,
 }
 
-CURRENT_STATE = STATES['IDLE']
+CURRENT_STATE = STATES['EXECUTING_CMDS']
 
 NODES = {
     'MPU':0xaa,
@@ -602,7 +602,7 @@ def fs_interface(cmd_file):
     global send_queue, conn, CURRENT_STATE
     
     TCP_IP = '0.0.0.0'
-    TCP_PORT = 50054
+    TCP_PORT = 50000
     
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:

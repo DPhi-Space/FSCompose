@@ -1,0 +1,13 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY ./requirements.txt /app/
+
+RUN pip install -r requirements.txt
+
+RUN pip install smbus2
+
+COPY ./nano_i2c.py /app/
+
+CMD ["python3","-u", "nano_i2c.py"]

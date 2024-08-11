@@ -2,12 +2,11 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-RUN pip install requests
+RUN pip install requests        # needed for the pdb_fun.py
 
 COPY ./pdb_fun.py /app/
 COPY ./user.json /app/
 COPY ./payload.py /app/
 
-EXPOSE 80
 
 CMD ["python3","-u", "payload.py"]

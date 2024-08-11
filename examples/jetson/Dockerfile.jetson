@@ -1,0 +1,11 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+RUN pip install pyserial requests
+
+COPY ./interface.py /app/
+COPY ./pdb_fun.py /app/
+COPY ./user.json  /app/
+
+CMD ["python3","-u", "interface.py"]

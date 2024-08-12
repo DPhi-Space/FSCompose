@@ -31,7 +31,7 @@ STATES = {
     'EXIT'                  :   0xFF,
 }
 
-CURRENT_STATE = STATES['EXECUTING_CMDS']
+CURRENT_STATE = STATES['IDLE']
 
 NODES = {
     'MPU':0xaa,
@@ -602,18 +602,19 @@ def fs_interface(cmd_file):
     global send_queue, conn, CURRENT_STATE
     
     TCP_IP = '0.0.0.0'
-    TCP_PORT = 50000
+    TCP_PORT = 50054
     
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    conn.settimeout(10)
     try:
         conn.connect((TCP_IP, TCP_PORT))
     
     except socket.timeout:
-        print("Timeout: failed to connect to FS. Have you ran ./run.sh ? ")
+        print("Timeout: failed to connect to FS.")
         return
     except Exception as e:
         print(f"Error: {e}")
-        print("Failed to connect to FS. Have you ran ./run.sh ? ")
+        print("Failed to connect to FS.")
         return
 
     
@@ -699,6 +700,7 @@ def fs_interface(cmd_file):
     
             
 if __name__ == "__main__":
+    time.sleep(3)
     fs_interface('cmds-clients.bin')
     
     

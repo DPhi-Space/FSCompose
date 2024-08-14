@@ -70,8 +70,17 @@ def setup_fs():
     content = template.render(provider_json['providers'][0])
     with open('docker-compose.yml', mode='w', encoding='utf-8') as f:
         f.write(content)
+    try:
+        subprocess.run(['docker', 'compose', 'pull'], check=True)
+    except:
+        
+        print("\n[ERROR] Failed to pull containers from the registry.")
+        print("⚠️  Have you logged in to the registry?")
+        print("\n🔑  Run the following command to log in with your credentials:\n")
+        print("   docker login ops.dphi.space")
+        print("\n📧  (Credentials were provided via email)\n")
 
-    subprocess.run(['docker', 'compose', 'pull'])
+        exit()
     subprocess.run(['docker', 'compose', 'up', '-d'])
     subprocess.run(['docker', 'cp', './deploy/providers.json', 'fsw:/app/providers.json'])
     subprocess.run(['docker', 'cp', './deploy/pdb_fun.stub.py', f"fsw:/app/payloads/{provider_json['providers'][0]['name']}/pdb_fun.py"])

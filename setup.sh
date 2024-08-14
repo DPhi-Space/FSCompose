@@ -378,7 +378,7 @@ do_install() {
 
 			You may press Ctrl+C now to abort this script.
 		EOF
-		( set -x; sleep 20 )
+		( set -x; sleep 10 )
 	fi
 
 	user="$(id -un 2>/dev/null || true)"
@@ -742,5 +742,3 @@ do_install() {
 # half the file during "curl | sh"
 
 do_install
-
-docker compose pull fsw gds

@@ -27,6 +27,22 @@ sudo ./setup.sh
 > sudo chmod +x setup.sh
 > ```
 
+# Configuration
+
+FSCompose needs some special Docker configurations to be set in order to properly function, such as enabling local registries. To correctly configure it, run the following script :
+
+```bash
+chmod +x configure.sh
+sudo ./configure.sh
+```
+
+> ⚠️ For now, sudo permission is needed for this script as it will copy the `docker-daemon.json` file to the `/etc/docker/` folder and restart the docker service with systemctl. You can perform this manually if you prefer. Also add the following entry to the `/etc/hosts` if you do this manually :
+>
+> ```
+> # /etc/hosts
+> 0.0.0.0   registry
+> ```
+
 # Run the FSCompose
 
 To kick-off development, start by creating a new python environment and installing the necessary packages to run the local:
@@ -56,6 +72,12 @@ Below is an example on how to fill it up:
   ]
 }
 ```
+
+> ⚠️⚠️ If you wish to use FSCompose with no device attached, leave the devices entry empty, as shown below. Otherwise, the FSCompose will try to attach the device specified to your Container and it will fail to launch it if the device does not exist.
+>
+> ```
+> "devices": [],
+> ```
 
 To start the local deployment of DPhi Space Flight Software (FS), first login to our private Docker Registry. Use the login credentials provided by email for the Docker Registry:
 

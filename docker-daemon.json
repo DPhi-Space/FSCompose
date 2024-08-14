@@ -1,0 +1,8 @@
+{
+  "insecure-registries": ["registry:5000"],
+  "features": {
+      "containerd-snapshotters": true,
+      "buildkit": true,
+      "experimental": false
+  }
+}

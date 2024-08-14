@@ -1,0 +1,15 @@
+{
+    "metadata": {
+        "version": "1.0", 
+        "description": "DPhi Space GPIO API"}, 
+    "api": {
+        "base_url": "http://127.0.0.1:5000/"},
+    "gpio_banks": {
+        "0" : {
+            "name": "GPIO Bank 0",
+            "description": "Test Bank which is never connected to real hardware. Use this bank for testing.",
+            "num_gpios": 32
+        }
+    }
+}
+

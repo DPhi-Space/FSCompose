@@ -4,7 +4,7 @@ services:
     image: ops.dphi.space/fsw
     container_name: fsw
     environment:
-      - FSW_DEVICE=[]
+      - FSW_DEVICE=['/dev/ttyUSB0']
       - GDS_IP=0.0.0.0
     networks:
       - network
